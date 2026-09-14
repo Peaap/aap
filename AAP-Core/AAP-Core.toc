@@ -19,3 +19,4 @@ Data\Routes.lua
 Engine\Engine.lua
 Core\Core.lua
 UI\UI.lua
+UI\Compat.lua
