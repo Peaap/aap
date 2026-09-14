@@ -2689,6 +2689,10 @@ local function AAP_UpdateMapId()
 	-- HBD already tracks the player's actual zone map. Route selectors use that ID.
 	local playerMapID = HBD:GetPlayerZone()
 	AAP.ActiveMap = playerMapID
+	-- TEMP DEBUG: remove after diagnosing empty Zone window.
+	print("AAP DEBUG ActiveMap:", AAP.ActiveMap)
+	print("AAP DEBUG PlayerZone:", HBD:GetPlayerZone())
+	print("AAP DEBUG HasRoute:", AAP.ActiveMap and AAP.QuestStepList[AAP.ActiveMap] ~= nil)
 	if (OldMap and OldMap ~= AAP.ActiveMap) then
 		AAP.BookingList["PrintQStep"] = 1
 	end
@@ -4278,6 +4282,10 @@ local function AAP_UpdateMapId()
 	end
 	if (AAP.ActiveQuests and AAP.ActiveQuests[26320] and (playerMapID == 291 or playerMapID == 292)) then
 		AAP.ActiveMap = "ADeadmines"
+	end
+	-- TEMP DEBUG: remove after diagnosing empty Zone window.
+	if (AAP.ActiveMap) then
+		print("AAP DEBUG Route:", AAP.ActiveMap, AAP.QuestStepList[AAP.ActiveMap])
 	end
 	local route = AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap]
 	if (route and not route[AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]]) then
