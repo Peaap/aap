@@ -23,7 +23,7 @@ AAP.Banners.Range.P5.B2 = {}
 AAP.Banners.Range.P5.B3 = {}
 AAP.Banners.Group = {}
 AAP.Banners.Group["Nr"] = 0
-AAP_RegisterChatBanner = C_ChatInfo.RegisterAddonMessagePrefix("AAPChatBanner")
+AAP_RegisterChatBanner = RegisterAddonMessagePrefix("AAPChatBanner")
 
 function AAP_MakeBanners()
 	AAP.Banners.BannersFrame = CreateFrame("frame", "AAP_BannersFrame", UIParent)
@@ -587,7 +587,7 @@ AAP.Banners.BannersEvents:SetScript("OnEvent", function(self, event, ...)
 	if (event=="ADDON_LOADED" and AAP_DisableAddon == 0) then
 		local arg1, arg2, arg3, arg4, arg5 = ...;
 		if (arg1 == "AAP-Core") then
-			AAP_RegisterChatBanner = C_ChatInfo.RegisterAddonMessagePrefix("AAPChatBanner")
+			AAP_RegisterChatBanner = RegisterAddonMessagePrefix("AAPChatBanner")
 			if (not AAP1[AAP.Realm][AAP.Name]["Settings"]["Bannersleft"]) then
 				AAP1[AAP.Realm][AAP.Name]["Settings"]["Bannersleft"] = GetScreenWidth() / 1.6
 			end
@@ -1060,7 +1060,7 @@ AAP.Banners.BannersEvents:SetScript("OnEvent", function(self, event, ...)
 			AAP.Banners.Range.P1.B1.X = d_x
 			AAP.Banners.Range.P1.B1.Y = d_y
 			AAP.Banners.Range.P1.B1.T = 600
-			C_ChatInfo.SendAddonMessage("AAPChatBanner", "1Z"..d_x.."Z"..d_y, "PARTY")
+			SendAddonMessage("AAPChatBanner", "1Z"..d_x.."Z"..d_y, "PARTY")
 		end
 		-- 10%
 		if (arg1 and arg3 and arg1 == "player" and (tonumber(arg3) == 90632 or tonumber(arg3) == 90626)) then
@@ -1080,7 +1080,7 @@ AAP.Banners.BannersEvents:SetScript("OnEvent", function(self, event, ...)
 			AAP.Banners.Range.P1.B2.X = d_x
 			AAP.Banners.Range.P1.B2.Y = d_y
 			AAP.Banners.Range.P1.B2.T = 600
-			C_ChatInfo.SendAddonMessage("AAPChatBanner", "2Z"..d_x.."Z"..d_y, "PARTY")
+			SendAddonMessage("AAPChatBanner", "2Z"..d_x.."Z"..d_y, "PARTY")
 		end
 		-- 5%
 		if (arg1 and arg3 and arg1 == "player" and (tonumber(arg3) == 90631 or tonumber(arg3) == 89479)) then
@@ -1100,7 +1100,7 @@ AAP.Banners.BannersEvents:SetScript("OnEvent", function(self, event, ...)
 			AAP.Banners.Range.P1.B3.X = d_x
 			AAP.Banners.Range.P1.B3.Y = d_y
 			AAP.Banners.Range.P1.B3.T = 600
-			C_ChatInfo.SendAddonMessage("AAPChatBanner", "3Z"..d_x.."Z"..d_y, "PARTY")
+			SendAddonMessage("AAPChatBanner", "3Z"..d_x.."Z"..d_y, "PARTY")
 		end
 		AAP_BannerUpdRangeTimer:Play()
 	end

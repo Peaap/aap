@@ -3,8 +3,8 @@ local AAP_ArrowUpdateNr = 0
 local ETAStep = 0
 local AAP_AntiTaxiLoop = 0
 local Updateblock = 0
-local HBDP = LibStub("HereBeDragons-Pins-2.0")
-local HBD = LibStub("HereBeDragons-2.0")
+local HBDP = LibStub("HereBeDragons-Pins-1.0")
+local HBD = LibStub("HereBeDragons-1.0")
 local AAPWhereToGo
 local CurMapShown
 local Delaytime = 0
@@ -45,61 +45,14 @@ local AAP_BonusObj = {
 --- DH Start Area ----
 	[39279] = 1,
 	[39742] = 1,
----- BFA Bonus Obj ----
-	[50005] = 1,
-	[50009] = 1,
-	[50080] = 1,
-	[50448] = 1,
-	[50133] = 1,
-	[51534] = 1,
-	[50779] = 1,
-	[49739] = 1,
-	[51689] = 1,
-	[50497] = 1,
-	[48093] = 1,
-	[47996] = 1,
-	[48934] = 1,
-	[49315] = 1,
-	[48852] = 1,
-	[49406] = 1,
-	[48588] = 1,
-	[47756] = 1,
-	[49529] = 1,
-	[49300] = 1,
-	[47797] = 1,
-	[49315] = 1,
-	[50178] = 1,
-	[49918] = 1,
-	[47527] = 1,
-	[47647] = 1,
-	[51900] = 1,
-	[50805] = 1,
-	[48474] = 1,
-	[48525] = 1,
-	[45972] = 1,
-	[47969] = 1,
-	[48181] = 1,
-	[48680] = 1,
-	[50091] = 1,
 }
-local MapRects = {};
-local TempVec2D = CreateVector2D(0,0);
-local function GetPlayerMapPos(MapID, dx, dy)
-    local R,P,_ = MapRects[MapID],TempVec2D;
-    if not R then
-        R = {};
-        _, R[1] = C_Map.GetWorldPosFromMapPos(MapID,CreateVector2D(0,0));
-        _, R[2] = C_Map.GetWorldPosFromMapPos(MapID,CreateVector2D(1,1));
-        R[2]:Subtract(R[1]);
-        MapRects[MapID] = R;
-    end
-	if (dx) then
-		P.x, P.y = dx, dy
-	else
-		P.x, P.y = UnitPosition('Player');
+local function GetPlayerMapPos(mapID, worldY, worldX)
+	if worldY and worldX then
+		return HBD:GetZoneCoordinatesFromWorld(worldX, worldY, mapID, nil, true)
 	end
-    P:Subtract(R[1]);
-    return (1/R[2].y)*P.y, (1/R[2].x)*P.x;
+
+	local x, y = HBD:GetPlayerZonePosition(true)
+	return x, y
 end
 function AAP.RemoveIcons()
 	for CLi = 1, 20 do
@@ -126,14 +79,19 @@ function AAP:MoveIcons()
 		AAP.RemoveIcons()
 		return
 	end
+	local playerMapID, playerMapFloor = HBD:GetPlayerZone()
+	if not playerMapID then
+		AAP.RemoveIcons()
+		return
+	end
 	local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 	local ix, iy
 	if (AAP.SettingsOpen == 1) then
-		ix, iy = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), AAP.ArrowActive_Y, AAP.ArrowActive_X)
+		ix, iy = GetPlayerMapPos(playerMapID, AAP.ArrowActive_Y, AAP.ArrowActive_X)
 	elseif (CurStep and AAP.ActiveMap and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 		local steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
 		if (steps and steps["TT"]) then
-			ix, iy = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), steps["TT"]["y"],steps["TT"]["x"])
+			ix, iy = GetPlayerMapPos(playerMapID, steps["TT"]["y"],steps["TT"]["x"])
 		else
 			return
 		end
@@ -155,7 +113,7 @@ function AAP:MoveIcons()
 		if (AAP.QuestStepList[AAP.ActiveMap][CurStep+1] and AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["CRange"]) then
 			totalCR = 3
 		end
-		local px, py = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'))
+		local px, py = GetPlayerMapPos(playerMapID)
 		local CLi, CLi2
 		for CLi = 1, 20 do
 			local px2, py2
@@ -178,7 +136,7 @@ function AAP:MoveIcons()
 					px2 = px - px2 * AAP["Icons"][CLi]["P"]
 					py2 = py - py2 * AAP["Icons"][CLi]["P"]
 					AAP["Icons"][CLi]["D"] = 1
-					AAP.HBDP:AddMinimapIconMap("AAP", AAP["Icons"][CLi], C_Map.GetBestMapForUnit('player'), px2, py2, true, true)
+					AAP.HBDP:AddMinimapIconMF("AAP", AAP["Icons"][CLi], playerMapID, playerMapFloor, px2, py2, true)
 				else
 					AAP["Icons"][CLi]["A"] = 1
 					AAP["Icons"][CLi]["P"] = 0
@@ -187,9 +145,9 @@ function AAP:MoveIcons()
 				end
 			end
 		end
-		local px, py = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["x"])
+		local px, py = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["x"])
 		local CLi, CLi2
-		local ix, iy = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
+		local ix, iy = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
 		for CLi = 1, 20 do
 			local px2, py2
 			px2 = px - ix
@@ -202,7 +160,7 @@ function AAP:MoveIcons()
 					px2 = px - px2 * AAP["Icons"][CLi]["P"]
 					py2 = py - py2 * AAP["Icons"][CLi]["P"]
 					AAP["Icons"][CLi]["D"] = 2
-					AAP.HBDP:AddMinimapIconMap("AAP", AAP["Icons"][CLi], C_Map.GetBestMapForUnit('player'), px2, py2, true, true)
+					AAP.HBDP:AddMinimapIconMF("AAP", AAP["Icons"][CLi], playerMapID, playerMapFloor, px2, py2, true)
 				else
 					AAP["Icons"][CLi]["A"] = 0
 					AAP["Icons"][CLi]["P"] = 0
@@ -219,9 +177,9 @@ function AAP:MoveIcons()
 			end
 		end
 		if (totalCR == 3) then
-			local px, py = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
+			local px, py = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
 			local CLi, CLi2
-			local ix, iy = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'), AAP.QuestStepList[AAP.ActiveMap][CurStep+2]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+2]["TT"]["x"])
+			local ix, iy = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep+2]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+2]["TT"]["x"])
 			for CLi = 1, 20 do
 				local px2, py2
 				px2 = px - ix
@@ -234,7 +192,7 @@ function AAP:MoveIcons()
 						px2 = px - px2 * AAP["Icons"][CLi]["P"]
 						py2 = py - py2 * AAP["Icons"][CLi]["P"]
 						AAP["Icons"][CLi]["D"] = 3
-						AAP.HBDP:AddMinimapIconMap("AAP", AAP["Icons"][CLi], C_Map.GetBestMapForUnit('player'), px2, py2, true, true)
+						AAP.HBDP:AddMinimapIconMF("AAP", AAP["Icons"][CLi], playerMapID, playerMapFloor, px2, py2, true)
 					else
 						AAP["Icons"][CLi]["A"] = 0
 						AAP["Icons"][CLi]["P"] = 0
@@ -245,7 +203,7 @@ function AAP:MoveIcons()
 			end
 		end
 	else
-		local px, py = GetPlayerMapPos(C_Map.GetBestMapForUnit('player'))
+		local px, py = GetPlayerMapPos(playerMapID)
 		local CLi, CLi2
 		for CLi = 1, 20 do
 			local px2, py2
@@ -266,7 +224,7 @@ function AAP:MoveIcons()
 				if (AAP["Icons"][CLi].P < 1) then
 					px2 = px - px2 * AAP["Icons"][CLi]["P"]
 					py2 = py - py2 * AAP["Icons"][CLi]["P"]
-					AAP.HBDP:AddMinimapIconMap("AAP", AAP["Icons"][CLi], C_Map.GetBestMapForUnit('player'), px2, py2, true, true)
+					AAP.HBDP:AddMinimapIconMF("AAP", AAP["Icons"][CLi], playerMapID, playerMapFloor, px2, py2, true)
 				else
 					AAP["Icons"][CLi]["A"] = 0
 					AAP["Icons"][CLi]["P"] = 0
@@ -286,18 +244,23 @@ function AAP:MoveMapIcons()
 	if (Delaytime == 1) then
 		return
 	end
-	if (WorldMapFrame:GetMapID() and WorldMapFrame:GetMapID() == 946) then
+	local displayedMapID = GetCurrentMapAreaID()
+	if (displayedMapID and displayedMapID == 946) then
 		return
 	end
-	if (CurMapShown ~= WorldMapFrame:GetMapID()) then
-		CurMapShown = WorldMapFrame:GetMapID()
+	if (CurMapShown ~= displayedMapID) then
+		CurMapShown = displayedMapID
 		Delaytime = 1
 		C_Timer.After(0.1, AAP_MapDelay)
 		return
 	end
-	local SetMapIDs = WorldMapFrame:GetMapID()
-	if (SetMapIDs == nil) then
-		SetMapIDs = C_Map.GetBestMapForUnit("player")
+	local SetMapIDs = displayedMapID
+	local SetMapFloor = GetCurrentMapDungeonLevel()
+	if not SetMapIDs then
+		SetMapIDs, SetMapFloor = HBD:GetPlayerZone()
+	end
+	if not SetMapIDs then
+		return
 	end
 	local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 	local ix, iy
@@ -348,7 +311,7 @@ function AAP:MoveMapIcons()
 					px2 = px - px2 * AAP["MapIcons"][CLi]["P"]
 					py2 = py - py2 * AAP["MapIcons"][CLi]["P"]
 					AAP["MapIcons"][CLi]["D"] = 1
-					AAP.HBDP:AddWorldMapIconMap("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, px2, py2, HBD_PINS_WORLDMAP_SHOW_PARENT)
+					AAP.HBDP:AddWorldMapIconMF("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, SetMapFloor, px2, py2)
 				else
 					AAP["MapIcons"][CLi]["A"] = 1
 					AAP["MapIcons"][CLi]["P"] = 0
@@ -372,7 +335,7 @@ function AAP:MoveMapIcons()
 					px2 = px - px2 * AAP["MapIcons"][CLi]["P"]
 					py2 = py - py2 * AAP["MapIcons"][CLi]["P"]
 					AAP["MapIcons"][CLi]["D"] = 2
-					AAP.HBDP:AddWorldMapIconMap("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, px2, py2, HBD_PINS_WORLDMAP_SHOW_PARENT)
+					AAP.HBDP:AddWorldMapIconMF("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, SetMapFloor, px2, py2)
 				else
 					AAP["MapIcons"][CLi]["A"] = 0
 					AAP["MapIcons"][CLi]["P"] = 0
@@ -404,7 +367,7 @@ function AAP:MoveMapIcons()
 						px2 = px - px2 * AAP["MapIcons"][CLi]["P"]
 						py2 = py - py2 * AAP["MapIcons"][CLi]["P"]
 						AAP["MapIcons"][CLi]["D"] = 3
-						AAP.HBDP:AddWorldMapIconMap("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, px2, py2, HBD_PINS_WORLDMAP_SHOW_PARENT)
+						AAP.HBDP:AddWorldMapIconMF("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, SetMapFloor, px2, py2)
 					else
 						AAP["MapIcons"][CLi]["A"] = 0
 						AAP["MapIcons"][CLi]["P"] = 0
@@ -436,7 +399,7 @@ function AAP:MoveMapIcons()
 				if (AAP["MapIcons"][CLi].P < 1) then
 					px2 = px - px2 * AAP["MapIcons"][CLi]["P"]
 					py2 = py - py2 * AAP["MapIcons"][CLi]["P"]
-					AAP.HBDP:AddWorldMapIconMap("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, px2, py2, HBD_PINS_WORLDMAP_SHOW_PARENT)
+					AAP.HBDP:AddWorldMapIconMF("AAPMap", AAP["MapIcons"][CLi], SetMapIDs, SetMapFloor, px2, py2)
 				else
 					AAP["MapIcons"][CLi]["A"] = 0
 					AAP["MapIcons"][CLi]["P"] = 0
@@ -479,7 +442,7 @@ end
 local function AAP_SendGroup()
 	if (IsInGroup(LE_PARTY_CATEGORY_HOME) and AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] and (AAP.LastSent ~= AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]) and (IsInInstance() == false)) then
 	
-		C_ChatInfo.SendAddonMessage("AAPChat", AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap], "PARTY");
+		SendAddonMessage("AAPChat", AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap], "PARTY");
 		AAP.LastSent = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 	end
 end
@@ -753,8 +716,6 @@ local function AAP_PrintQStep()
 			return
 		elseif (steps["PickUp"]) then
 			StepP = "PickUp"
-		elseif (steps["WarMode"]) then
-			StepP = "WarMode"
 		elseif (steps["DalaranToOgri"]) then
 			StepP = "DalaranToOgri"
 		elseif (steps["Qpart"]) then
@@ -1083,9 +1044,6 @@ local function AAP_PrintQStep()
 			end
 			if (AAPExtralk == 33) then
 				AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("** "..AAP_Locals["Totemdmg"].." **")
-			end
-			if (AAPExtralk == 34) then
-				AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("** "..AAP_Locals["WarModeOff"].." **")
 			end
 			if (AAPExtralk == 35) then
 				AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("** "..AAP_Locals["LoaInfo1"])
@@ -1648,28 +1606,6 @@ local function AAP_PrintQStep()
 					else
 						AAP.QuestList.QuestFrames[LineNr]:SetWidth(410)
 					end
-				end
-			end
-		elseif (StepP == "WarMode") then
-			if (IsQuestFlaggedCompleted(steps["WarMode"]) or C_PvP.IsWarModeDesired() == true) then
-				AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] + 1
-				AAP.BookingList["PrintQStep"] = 1
-			else
-				if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQList"] == 1) then
-					LineNr = LineNr + 1
-					AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("*** Turn on WARMODE ***")
-					AAP.QuestList.QuestFrames[LineNr]:Show()
-					AAP.QuestList.QuestFrames["FS"..LineNr]["Button"]:Hide()
-					local aapwidth = AAP.QuestList.QuestFrames["FS"..LineNr]:GetStringWidth()
-					if (aapwidth and aapwidth > 400) then
-						AAP.QuestList.QuestFrames[LineNr]:SetWidth(aapwidth+10)
-					else
-						AAP.QuestList.QuestFrames[LineNr]:SetWidth(410)
-					end
-				end
-				if (C_PvP.IsWarModeDesired() == false and C_PvP.CanToggleWarMode("toggle") == true) then
-					C_PvP.ToggleWarMode()
-					AAP.BookingList["PrintQStep"] = 1
 				end
 			end
 		elseif (StepP == "UseDalaHS") then
@@ -2687,16 +2623,9 @@ local function AAP_UpdateMapId()
 	local levelcheck100 = 0
 	local levelcheck110 = 0
 	AAP.Level = UnitLevel("player")
-	AAP.ActiveMap = C_Map.GetBestMapForUnit("player")
-	local currentMapId, TOP_MOST = C_Map.GetBestMapForUnit('player'), true
-	if (Enum and Enum.UIMapType and Enum.UIMapType.Continent and currentMapId) then
-		AAP.ActiveMap = MapUtil.GetMapParentInfo(currentMapId, Enum.UIMapType.Continent+1, TOP_MOST)
-	end
-	if (AAP.ActiveMap and AAP.ActiveMap["mapID"]) then
-		AAP.ActiveMap = AAP.ActiveMap["mapID"]
-	else
-		AAP.ActiveMap = C_Map.GetBestMapForUnit("player")
-	end
+	local playerMapID = HBD:GetPlayerZone()
+	local continent = playerMapID and HBD:GetCZFromMapID(playerMapID)
+	AAP.ActiveMap = continent and HBD:GetMapIDFromCZ(continent, 0) or playerMapID
 	if (OldMap and OldMap ~= AAP.ActiveMap) then
 		AAP.BookingList["PrintQStep"] = 1
 	end
@@ -2720,14 +2649,13 @@ local function AAP_UpdateMapId()
 		AAP.ActiveMap = "DK23-A"
 	end
 
-	if (not AAP1[AAP.Realm][AAP.Name]["SavedVer"]) then
-		if (AAP1[AAP.Realm][AAP.Name]["A895-110-120-3"]) then
-			AAP1[AAP.Realm][AAP.Name]["A895-110-120-3"] = 1
-		end
-		if (AAP1[AAP.Realm][AAP.Name]["A942-110-120"]) then
-			AAP1[AAP.Realm][AAP.Name]["A942-110-120"] = 1
-		end
-		AAP1[AAP.Realm][AAP.Name]["SavedVer"] = AAP.Version
+	if (not AAP1[AAP.Realm][AAP.Name]["LegionSavedVer"]) then
+		-- Discard BfA-only progress/state without altering shared UI settings.
+		AAP1[AAP.Realm][AAP.Name]["A895-110-120-3"] = nil
+		AAP1[AAP.Realm][AAP.Name]["A942-110-120"] = nil
+		AAP1[AAP.Realm][AAP.Name]["LoaPick"] = nil
+		AAP1[AAP.Realm][AAP.Name]["AAP_DoWarCampaign"] = nil
+		AAP1[AAP.Realm][AAP.Name]["LegionSavedVer"] = AAP.Version
 	end
 
 	local AAPZoneActiveCheck = 0
@@ -4259,357 +4187,7 @@ local function AAP_UpdateMapId()
 			end
 		end
 	end
---------------------------------
----- BFA - Horde ---------------
-	if (AAP.Faction == "Horde" and AAP.Level > 109 and AAP.Level < 120) then
-		if (AAP.ActiveMap == 627) then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-				local loaded, reason = LoadAddOn("AAP-BfA")
-				if (not loaded) then
-					if (reason == "DISABLED") then
-						print("AAP: AAP-BfA is Disabled in your Addon-List!")
-					end
-				end
-			end
-			AAP.ActiveMap = "627-110"
-		end
-		if (AAP.ActiveMap == 81) then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-				local loaded, reason = LoadAddOn("AAP-BfA")
-				if (not loaded) then
-					if (reason == "DISABLED") then
-						print("AAP: AAP-BfA is Disabled in your Addon-List!")
-					end
-				end
-			end
-			AAP.ActiveMap = "81-110"
-		end
-		if (AAP.ActiveMap == 249) then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-				local loaded, reason = LoadAddOn("AAP-BfA")
-				if (not loaded) then
-					if (reason == "DISABLED") then
-						print("AAP: AAP-BfA is Disabled in your Addon-List!")
-					end
-				end
-			end
-			AAP.ActiveMap = "249-110"
-		end
-		if (AAP.ActiveMap == 85 and (AAP.ActiveQuests[53372] or IsQuestFlaggedCompleted(53372) == true)) then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-				local loaded, reason = LoadAddOn("AAP-BfA")
-				if (not loaded) then
-					if (reason == "DISABLED") then
-						print("AAP: AAP-BfA is Disabled in your Addon-List!")
-					end
-				end
-			end
-			AAP.ActiveMap = "1-110"
-		end
-	end
-	if (AAP.Faction == "Horde" and AAP.Level > 109 and AAP.Level < 123) then
-		if (AAP.ActiveMap == 862) then
-			if ((AAP.ActiveQuests[47514] or IsQuestFlaggedCompleted(47514) == true) and IsQuestFlaggedCompleted(50963) == false) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "862-110-120-3"
-			elseif ((AAP.ActiveQuests[47513] or IsQuestFlaggedCompleted(47513) == true) and IsQuestFlaggedCompleted(47315) == false) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "862-110-120-1"
-			elseif ((AAP.ActiveQuests[47512] or IsQuestFlaggedCompleted(47512) == true) and IsQuestFlaggedCompleted(47105) == false) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "862-110-120-2"
-			elseif (IsQuestFlaggedCompleted(47105) == true and IsQuestFlaggedCompleted(47315) == true and IsQuestFlaggedCompleted(50963) == true) then
-				AAP1[AAP.Realm][AAP.Name]["HordeD"] = 1
-				AAP.ActiveMap = "862-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "862-110-120"
-			end
-		end
-		if (AAP.ActiveMap == 863) then
-			if (IsQuestFlaggedCompleted(50808)) then
-				AAP.ActiveMap = "863-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "863-110-120"
-			end
-		end
-		if (AAP.ActiveMap == 864) then
-			if (IsQuestFlaggedCompleted(50703)) then
-				AAP.ActiveMap = "864-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "864-110-120"
-			end
-		end
-		if (AAP.ActiveMap == 895) then
-			if (IsQuestFlaggedCompleted(51984)) then
-				AAP.ActiveMap = "895-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "895-110-120"
-			end
-		end
-		if (AAP.ActiveMap == 896) then
-			if (IsQuestFlaggedCompleted(51985)) then
-				AAP.ActiveMap = "896-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "896-110-120"
-			end
-		end
-		if (AAP.ActiveMap == 942) then
-			if (IsQuestFlaggedCompleted(51986)) then
-				AAP.ActiveMap = "942-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "942-110-120"
-			end
-		end
-	end
---------------------------------
----- BFA - Alliance ------------
-	if (AAP.Faction == "Alliance" and AAP.Level > 109 and AAP.Level < 120) then
-		if (AAP.ActiveMap == "A84") then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-			end
-			AAP.ActiveMap = "A84-110-120"
-		end
-		if (AAP.ActiveMap == "A249") then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-			end
-			AAP.ActiveMap = "A249-110-120"
-		end
-		if (AAP.ActiveMap == "A81") then
-			if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-			end
-			AAP.ActiveMap = "A81-110-120"
-		end
-	end
-	if (AAP.Faction == "Alliance" and AAP.Level > 109 and AAP.Level < 123) then
-		if (AAP.ActiveMap == "A895") then
-			if ((AAP.ActiveQuests[47961] or IsQuestFlaggedCompleted(47961) == true) and not IsQuestFlaggedCompleted(48622)) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A895-110-120-1"
-			elseif ((AAP.ActiveQuests[47962] or IsQuestFlaggedCompleted(47962) == true) and not IsQuestFlaggedCompleted(51490)) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A895-110-120-2"
-			elseif ((AAP.ActiveQuests[47960] or IsQuestFlaggedCompleted(47960) == true) and not IsQuestFlaggedCompleted(50972)) then
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A895-110-120-3"
-			else
-				if (IsQuestFlaggedCompleted(48622) and IsQuestFlaggedCompleted(51490) and IsQuestFlaggedCompleted(50972)) then
-					AAP.ActiveMap = "A895-99"
-				else
-					if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-					end
-					AAP.ActiveMap = "A895-110-120"
-				end
-			end
-		end
-		if (AAP.ActiveMap == "A942") then
-			if (IsQuestFlaggedCompleted(49908)) then
-				AAP.ActiveMap = "A942-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A942-110-120"
-			end
-		end
-		if (AAP.ActiveMap == "A876") then
-			if (IsQuestFlaggedCompleted(47098)) then
-				AAP.ActiveMap = "A876-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A876-110-120"
-			end
-		end
-		if (AAP.ActiveMap == "A863") then
-			if (IsQuestFlaggedCompleted(51967)) then
-				AAP.ActiveMap = "A863-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A863-110-120"
-			end
-		end
-		if (AAP.ActiveMap == "A862") then
-			if (IsQuestFlaggedCompleted(51968)) then
-				AAP.ActiveMap = "A862-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A862-110-120"
-			end
-		end
-		if (AAP.ActiveMap == "A864") then
-			if (IsQuestFlaggedCompleted(51969)) then
-				AAP.ActiveMap = "A864-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A864-110-120"
-			end
-		end
-		if (AAP.ActiveMap == "A896") then
-			if (IsQuestFlaggedCompleted(50639)) then
-				AAP.ActiveMap = "A896-99"
-			else
-				if (IsAddOnLoaded("AAP-BfA") == false) then
-					local loaded, reason = LoadAddOn("AAP-BfA")
-					if (not loaded) then
-						if (reason == "DISABLED") then
-							print("AAP: AAP-BfA is Disabled in your Addon-List!")
-						end
-					end
-				end
-				AAP.ActiveMap = "A896-110-120"
-			end
-		end
-	end
---------------------------------
-	if (AAP.Faction == "Horde" and AAP.Level == 120 and AAP1[AAP.Realm][AAP.Name]["Settings"]["WQs"] == 1) then
-		AAP.WQFunc()
-	end
+	-- World quest routing is BfA-only and is not part of the Legion package.
 	
 	--levelcheck = 1
 	if (levelcheck == 1) then
@@ -4637,7 +4215,7 @@ local function AAP_UpdateMapId()
 	else
 		AAP.Dinged110 = 0
 	end
-	if (AAP.ActiveQuests and AAP.ActiveQuests[26320] and (C_Map.GetBestMapForUnit("player") == 291 or C_Map.GetBestMapForUnit("player") == 292)) then
+	if (AAP.ActiveQuests and AAP.ActiveQuests[26320] and (playerMapID == 291 or playerMapID == 292)) then
 		AAP.ActiveMap = "ADeadmines"
 	end
 	if (not AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]) then
@@ -4652,23 +4230,6 @@ local function AAP_UpdateMapId()
 		AAP.UpdateZoneQuestOrderList("LoadIn")
 	end
 	AAP_CheckZoneSteps()
-end
-local function AAP_CheckZonePick()
-	if (AAP.ActiveMap == 862) then
-		if (IsQuestFlaggedCompleted(50963) == false and (AAP.ActiveQuests[47514] or IsQuestFlaggedCompleted(47514) == true)) then
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-		elseif ((AAP.ActiveQuests[47513] or IsQuestFlaggedCompleted(47513) == true) and IsQuestFlaggedCompleted(47315) == false) then
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-		elseif ((AAP.ActiveQuests[47512] or IsQuestFlaggedCompleted(47512) == true) and IsQuestFlaggedCompleted(47105) == false) then
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-		elseif (IsQuestFlaggedCompleted(47105) == true and IsQuestFlaggedCompleted(47315) == true and IsQuestFlaggedCompleted(50963) == true) then
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-		end
-	end
 end
 local function AAP_AcceptQuester()
 	AcceptQuest()
@@ -4909,10 +4470,6 @@ local function AAP_LoopBookingFunc()
 		AAP.BookingList["CheckSaveOldSlot"] = nil
 		AAP_CheckSaveOldSlot()
 		TestaAAP = "CheckSaveOldSlot"
-	elseif (AAP.BookingList["CheckZonePick"]) then
-		AAP.BookingList["CheckZonePick"] = nil
-		AAP_CheckZonePick()
-		TestaAAP = "CheckZonePick"
 	elseif (AAP.BookingList["SetQPTT"]) then
 		AAP.BookingList["SetQPTT"] = nil
 		AAP_SetQPTT()
@@ -5576,20 +5133,8 @@ AAP_QH_EventFrame:SetScript("OnEvent", function(self, event, ...)
 		local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 		if (CurStep and AAP.QuestStepList and AAP.ActiveMap and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 			local steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
-			if (steps and steps["ZonePick"]) then
-				AAP.BookingList["CheckZonePick"] = 1
-			end
-			if (steps and steps["LoaPick"] and steps["LoaPick"] == 123 and (AAP.ActiveQuests[47440] or AAP.ActiveQuests[47439])) then
-				AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] + 1
-				AAP.BookingList["PrintQStep"] = 1
-			end
 		end
 		C_Timer.After(3, AAP_BookQStep)
-		if (AAP.HordeWQList and AAP.HordeWQList[arg2] and AAP.Faction == "Horde" and AAP.Level == 120 and AAP.WQActive == 0 and AAP1[AAP.Realm][AAP.Name]["Settings"]["WQs"] == 1) then
-			AAP.WQFunc()
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-		end
 	end
 	if (event=="QUEST_REMOVED") then
 		if (AAP1["Debug"]) then
@@ -5597,13 +5142,6 @@ AAP_QH_EventFrame:SetScript("OnEvent", function(self, event, ...)
 		end
 		local arg1, arg2, arg3, arg4, arg5 = ...;
 		AAP.BookingList["RemoveQuest"] = arg1
-		if (AAP.ActiveMap == arg1 and AAP1[AAP.Realm][AAP.Name]["Settings"]["WQs"] == 1) then
-			AAP.WQFunc()
-			AAP.BookingList["UpdateMapId"] = 1
-			AAP.BookingList["PrintQStep"] = 1
-			AAP1[AAP.Realm][AAP.Name][arg1] = nil
-			AAP.RemoveMapIcons()
-		end
 	end
 	if (event=="UNIT_QUEST_LOG_CHANGED") then
 		local arg1, arg2, arg3, arg4, arg5 = ...;

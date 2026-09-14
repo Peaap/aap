@@ -1,5 +1,5 @@
-## Interface: 80100
-## X-Min-Interface: 80100
+## Interface: 70300
+## X-Min-Interface: 70300
 
 ## Title: Azeroth Auto Pilot <3> 80-90
 ## Notes: Cata and MoP for AAP

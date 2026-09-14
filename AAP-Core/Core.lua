@@ -15,7 +15,7 @@ AAP.Icons = {}
 AAP.MapIcons = {}
 AAP.Breadcrums = {}
 AAP.ActiveQuests = {}
-AAP.RegisterChat = C_ChatInfo.RegisterAddonMessagePrefix("AAPChat")
+AAP.RegisterChat = RegisterAddonMessagePrefix("AAPChat")
 AAP.LastSent = 0
 AAP.GroupListSteps = {}
 AAP.GroupListStepsNr = 1
@@ -1829,18 +1829,14 @@ AAP.AllyBoatNpcs = {
 	[135056] = 1,
 }
 function AAP.getContinent()
-    local mapID = C_Map.GetBestMapForUnit("player")
-    if(mapID) then
-        local info = C_Map.GetMapInfo(mapID)
-        if(info) then
-            while(info['mapType'] and info['mapType'] > 2) do
-                info = C_Map.GetMapInfo(info['parentMapID'])
-            end
-            if(info['mapType'] == 2) then
-                return info['mapID']
-            end
-        end
-    end
+	local hbd = LibStub("HereBeDragons-1.0")
+	local mapID = hbd:GetPlayerZone()
+	if not mapID then
+		return nil
+	end
+
+	local continent = hbd:GetCZFromMapID(mapID)
+	return continent and hbd:GetMapIDFromCZ(continent, 0) or nil
 end
 BINDING_HEADER_AzerothAutoPilot = "Azeroth Auto Pilot"
 BINDING_NAME_AAP_MACRO = "Quest Item 1"
@@ -2142,11 +2138,11 @@ end
 				AAP_LoadInTimer:Stop()
 				C_Timer.After(4, AAP_UpdatezeMapId)
 				C_Timer.After(5, AAP_BookQStep)
-				AAP.RegisterChat = C_ChatInfo.RegisterAddonMessagePrefix("AAPChat")
+				AAP.RegisterChat = RegisterAddonMessagePrefix("AAPChat")
 			end
 		end)
 		AAP_LoadInTimer:Play()
-		AAP.RegisterChat = C_ChatInfo.RegisterAddonMessagePrefix("AAPChat")
+		AAP.RegisterChat = RegisterAddonMessagePrefix("AAPChat")
 		
 		
 		AAP_IconTimer = AAP.CoreEventFrame:CreateAnimationGroup()
@@ -2168,9 +2164,6 @@ end
 		AAP_IconTimer:Play()
 		
 		
-		if (not AAP1[AAP.Realm][AAP.Name]["LoaPick"]) then
-			AAP1[AAP.Realm][AAP.Name]["LoaPick"] = 0
-		end
 			if (not AAP1[AAP.Realm][AAP.Name]["QlineSkip"]) then
 				AAP1[AAP.Realm][AAP.Name]["QlineSkip"] = {}
 			end
@@ -2287,9 +2280,6 @@ end
 			end
 			if (not AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQList"]) then
 				AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQList"] = 1
-			end
-			if (not AAP1[AAP.Realm][AAP.Name]["AAP_DoWarCampaign"]) then
-				AAP1[AAP.Realm][AAP.Name]["AAP_DoWarCampaign"] = 0
 			end
 
 			if (not AAP1[AAP.Realm][AAP.Name]["WantedQuestList"]) then

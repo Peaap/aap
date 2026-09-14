@@ -1,5 +1,5 @@
-## Interface: 80100
-## X-Min-Interface: 80100
+## Interface: 70300
+## X-Min-Interface: 70300
 
 ## Title: Azeroth Auto Pilot
 ## Notes: Leveling Addon
@@ -8,8 +8,8 @@
 ## SavedVariables: AAP1, AAP2, AAP3, AAPQuestNames, AAP_HoldZoneVar
 lib\LibStub\LibStub.lua
 lib\CallbackHandler-1.0\CallbackHandler-1.0.xml
-lib\HereBeDragons\HereBeDragons-2.0.lua
-lib\HereBeDragons\HereBeDragons-Pins-2.0.lua
+lib\HereBeDragons\HereBeDragons-1.0.lua
+lib\HereBeDragons\HereBeDragons-Pins-1.0.lua
 Localization.lua
 Bindings.xml
 Core.lua
@@ -23,5 +23,3 @@ zones\Horde.lua
 zones\Both.lua
 Minimap.lua
 QuestTest.lua
-
-WorldQuests.lua

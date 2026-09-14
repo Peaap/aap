@@ -5,24 +5,13 @@ local SubQuestName = 0
 local ScrollMod = 0
 local MapIconOrder = {}
 local MapIconUpdateStep = 0
-local MapRects = {};
-local TempVec2D = CreateVector2D(0,0);
-local function GetPlayerMapPos(MapID, dx, dy)
-    local R,P,_ = MapRects[MapID],TempVec2D;
-    if not R then
-        R = {};
-        _, R[1] = C_Map.GetWorldPosFromMapPos(MapID,CreateVector2D(0,0));
-        _, R[2] = C_Map.GetWorldPosFromMapPos(MapID,CreateVector2D(1,1));
-        R[2]:Subtract(R[1]);
-        MapRects[MapID] = R;
-    end
-	if (dx) then
-		P.x, P.y = dx, dy
-	else
-		P.x, P.y = UnitPosition('Player');
+local function GetPlayerMapPos(mapID, worldY, worldX)
+	if worldY and worldX then
+		return AAP.HBD:GetZoneCoordinatesFromWorld(worldX, worldY, mapID, nil, true)
 	end
-    P:Subtract(R[1]);
-    return (1/R[2].y)*P.y, (1/R[2].x)*P.x;
+
+	local x, y = AAP.HBD:GetPlayerZonePosition(true)
+	return x, y
 end
 function AAP.Testa()
 	AAPHFiller2 = nil
@@ -927,9 +916,6 @@ function AAP.UpdateZoneQuestOrderList(AAPmod)
 				if (AAP.QuestStepList[AAP.ActiveMap][CCLi]["ZoneDone"]) then
 					AAP.ZoneQuestOrder["FS2"][CLi]:SetText("Zone Done")
 				end
-				if (AAP.QuestStepList[AAP.ActiveMap][CCLi]["WarMode"]) then
-					AAP.ZoneQuestOrder["FS2"][CLi]:SetText("Auto Enable Warmode")
-				end
 				AAP.ZoneQuestOrder[CLi]:Show()
 				AAP.ZoneQuestOrder["Order1"][CLi]:Show()
 			end
@@ -1002,9 +988,13 @@ function AAP.MapOrderNumbers()
 	local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 	if (AAP.ActiveMap and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and CurStep) then
 		local znr = 0
-		local SetMapIDs = WorldMapFrame:GetMapID()
-		if (SetMapIDs == nil) then
-			SetMapIDs = C_Map.GetBestMapForUnit("player")
+		local SetMapIDs = GetCurrentMapAreaID()
+		local SetMapFloor = GetCurrentMapDungeonLevel()
+		if not SetMapIDs then
+			SetMapIDs, SetMapFloor = AAP.HBD:GetPlayerZone()
+		end
+		if not SetMapIDs then
+			return
 		end
 		for AAP_index,AAP_value in pairs(AAP.QuestStepList[AAP.ActiveMap]) do
 			znr = znr + 1
@@ -1015,9 +1005,9 @@ function AAP.MapOrderNumbers()
 				if (not AAP.QuestStepList[AAP.ActiveMap][znr]["CRange"]) then
 					ix, iy = GetPlayerMapPos(SetMapIDs, AAP.QuestStepList[AAP.ActiveMap][znr]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][znr]["TT"]["x"])
 					if (CurStep < znr) then
-						AAP.HBDP:AddWorldMapIconMap("AAPMapOrder", AAP["MapZoneIconsRed"][znr], SetMapIDs, ix, iy, HBD_PINS_WORLDMAP_SHOW_PARENT)
+						AAP.HBDP:AddWorldMapIconMF("AAPMapOrder", AAP["MapZoneIconsRed"][znr], SetMapIDs, SetMapFloor, ix, iy)
 					else
-						AAP.HBDP:AddWorldMapIconMap("AAPMapOrder", AAP["MapZoneIcons"][znr], SetMapIDs, ix, iy, HBD_PINS_WORLDMAP_SHOW_PARENT)
+						AAP.HBDP:AddWorldMapIconMF("AAPMapOrder", AAP["MapZoneIcons"][znr], SetMapIDs, SetMapFloor, ix, iy)
 					end
 				end
 			end
@@ -2089,7 +2079,7 @@ AAP_QH_EventFrame = CreateFrame("Frame")
 AAP_QH_EventFrame:RegisterEvent ("QUEST_LOG_UPDATE")
 AAP_QH_EventFrame:SetScript("OnEvent", function(self, event, ...)
 	if (event=="QUEST_LOG_UPDATE") then
-		if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowMap10s"] and AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowMap10s"] == 1 and WorldMapFrame:IsShown() and AAP.ActiveMap and AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]) then
+		if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowMap10s"] and AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowMap10s"] == 1 and WorldMapButton and WorldMapButton:IsShown() and AAP.ActiveMap and AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]) then
 			local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
 			if (CurStep and MapIconUpdateStep ~= CurStep and CurStep > 1) then
 				AAP.MapOrderNumbers()
