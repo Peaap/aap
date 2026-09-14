@@ -622,7 +622,8 @@ AAP.QuestListEventFrame:SetScript("OnEvent", function(self, event, ...)
 	if (event=="ADDON_LOADED") then
 		local arg1, arg2, arg3, arg4, arg5 = ...;
 		if (arg1 == "AAP-Core") then
-			AAP_CreateQuestList()
+			-- TEMP startup isolation: do not construct quest UI during ADDON_LOADED.
+			-- AAP_CreateQuestList()
 			AAP.QuestListLoadin = 1
 		end
 	end

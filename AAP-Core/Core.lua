@@ -2121,7 +2121,8 @@ end
 		if (not AAP1[AAP.Realm][AAP.Name]["BonusSkips"]) then
 			AAP1[AAP.Realm][AAP.Name]["BonusSkips"] = {}
 		end
-		AAP.ZoneQuestOrderList()
+		-- TEMP startup isolation: do not construct the Zone Guide during ADDON_LOADED.
+		-- AAP.ZoneQuestOrderList()
 		AAP_LoadInTimer = AAP.CoreEventFrame:CreateAnimationGroup()
 		AAP_LoadInTimer.anim = AAP_LoadInTimer:CreateAnimation()
 		AAP_LoadInTimer.anim:SetDuration(1)
@@ -2199,10 +2200,12 @@ end
 			if (not AAP1[AAP.Realm][AAP.Name]["Settings"]["OrderListScale"]) then
 				AAP1[AAP.Realm][AAP.Name]["Settings"]["OrderListScale"] = 1
 			end
-			if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQuestListOrder"] == 1) then
-				AAP.ZoneQuestOrder:Show()
-			else
-				AAP.ZoneQuestOrder:Hide()
+			if (AAP.ZoneQuestOrder) then
+				if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQuestListOrder"] == 1) then
+					AAP.ZoneQuestOrder:Show()
+				else
+					AAP.ZoneQuestOrder:Hide()
+				end
 			end
 			if (not AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowBlobs"]) then
 				AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowBlobs"] = 1
@@ -2285,7 +2288,9 @@ end
 			if (not AAP1[AAP.Realm][AAP.Name]["WantedQuestList"]) then
 				AAP1[AAP.Realm][AAP.Name]["WantedQuestList"] = {}
 			end
-			AAP.ZoneQuestOrder:SetScale(AAP1[AAP.Realm][AAP.Name]["Settings"]["OrderListScale"])
+			if (AAP.ZoneQuestOrder) then
+				AAP.ZoneQuestOrder:SetScale(AAP1[AAP.Realm][AAP.Name]["Settings"]["OrderListScale"])
+			end
 			AAP_MakeBanners()
 			AAP.Banners.BannersFrame.Frame:SetScale(AAP1[AAP.Realm][AAP.Name]["Settings"]["BannerScale"])
 			AAP.Banners.BannersFrame["Frame1"]:SetScale(AAP1[AAP.Realm][AAP.Name]["Settings"]["BannerScale"])
