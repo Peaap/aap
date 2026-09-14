@@ -204,7 +204,7 @@ function AAP.ZoneQuestOrderList()
 	AAP.ZoneQuestOrder.ZoneName.FS:SetTextColor(1, 1, 0)
 	AAP.ZoneQuestOrder.ZoneName:Hide()
 		
-	AAP.ZoneQuestOrder["AAP_Button"] = CreateFrame("Button", "AAP_SBXOZ", AAP.ZoneQuestOrder, AAP.ZoneQuestOrder)
+	AAP.ZoneQuestOrder["AAP_Button"] = CreateFrame("Button", "AAP_SBXOZ", AAP.ZoneQuestOrder)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetWidth(15)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetHeight(15)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetText("X")
@@ -299,7 +299,7 @@ function AAP.ZoneQuestOrderList()
 	end)
 	if (not AAP.CompactTrackerEventFrame) then
 		AAP.CompactTrackerEventFrame = CreateFrame("Frame")
-		AAP.CompactTrackerEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+		--AAP.CompactTrackerEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 		AAP.CompactTrackerEventFrame:SetScript("OnEvent", function()
 			if (AAP.ZoneQuestOrder and AAP.ZoneQuestOrder:IsShown()) then
 				AAP.UpdateZoneQuestOrderList("LoadIn")
