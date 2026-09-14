@@ -8,5 +8,10 @@
 ## SavedVariables: AAP1, AAP2, AAP3, AAPQuestNames, AAP_HoldZoneVar
 Bootstrap.lua
 Data\Data.lua
+Data\Quests.lua
+Data\QuestTitles.lua
+Data\Zones.lua
+Data\NPCs.lua
+Data\Routes.lua
 Engine\Engine.lua
 Core\Core.lua

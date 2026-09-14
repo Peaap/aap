@@ -4,27 +4,54 @@
 AAP = AAP or {}
 AAP.Data = AAP.Data or {}
 AAP.Data.Dependencies = AAP.Data.Dependencies or {}
-AAP.Data.RouteRegistry = AAP.Data.RouteRegistry or {}
 
-local function registerRouteTable(registry, routes)
-	if (type(routes) ~= "table") then
+-- Dataset domains own static definitions only.  Preserve a pre-Stage 3 route
+-- registry when present, then retain RouteRegistry as an alias for callers
+-- that still use the legacy registry name.
+AAP.Data.Quests = AAP.Data.Quests or {}
+AAP.Data.QuestTitles = AAP.Data.QuestTitles or {}
+AAP.Data.Zones = AAP.Data.Zones or {}
+AAP.Data.NPCs = AAP.Data.NPCs or {}
+AAP.Data.Routes = AAP.Data.Routes or AAP.Data.RouteRegistry or {}
+AAP.Data.RouteRegistry = AAP.Data.Routes
+
+local function registerEntries(registry, entries, entryIsValid)
+	if (type(entries) ~= "table") then
 		return 0
 	end
 
 	local registered = 0
-	for routeKey, steps in pairs(routes) do
-		if (type(steps) == "table") then
-			-- Retain the legacy route value directly. The Data boundary owns this
-			-- registry mapping, but never rewrites route keys or step schemas.
-			registry[routeKey] = steps
+	for key, entry in pairs(entries) do
+		if (not entryIsValid or entryIsValid(entry)) then
+			-- Store the original key and value directly. Registration owns only
+			-- the domain mapping; it never rewrites a static definition.
+			registry[key] = entry
 			registered = registered + 1
 		end
 	end
 	return registered
 end
 
+function AAP.Data:RegisterQuests(quests)
+	return registerEntries(self.Quests, quests)
+end
+
+function AAP.Data:RegisterQuestTitles(questTitles)
+	return registerEntries(self.QuestTitles, questTitles)
+end
+
+function AAP.Data:RegisterZones(zones)
+	return registerEntries(self.Zones, zones)
+end
+
+function AAP.Data:RegisterNPCs(npcs)
+	return registerEntries(self.NPCs, npcs)
+end
+
 function AAP.Data:RegisterRoutes(routes)
-	return registerRouteTable(self.RouteRegistry, routes)
+	return registerEntries(self.Routes, routes, function(steps)
+		return type(steps) == "table"
+	end)
 end
 
 function AAP.Data:RegisterLegacyRouteTables(...)
@@ -47,8 +74,24 @@ function AAP.Data:RegisterAvailableLegacyRoutes()
 	)
 end
 
+function AAP.Data:QuestFor(questId)
+	return self.Quests[questId]
+end
+
+function AAP.Data:QuestTitleFor(questId)
+	return self.QuestTitles[questId]
+end
+
+function AAP.Data:ZoneFor(zoneKey)
+	return self.Zones[zoneKey]
+end
+
+function AAP.Data:NPCFor(npcId)
+	return self.NPCs[npcId]
+end
+
 function AAP.Data:RouteFor(routeKey)
-	return self.RouteRegistry[routeKey]
+	return self.Routes[routeKey]
 end
 
 -- Match the DataApi naming used by the engine design while preserving the

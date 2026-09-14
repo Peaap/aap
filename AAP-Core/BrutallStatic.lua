@@ -1,4 +1,4 @@
-﻿AAP.BrutallCC = {}
+AAP.BrutallCC = {}
 AAP.BrutallCC.BrutallFrame = {}
 AAP.BrutallCC.BrutallFrame = CreateFrame("frame", "AAP_PartyListFrame1", UIParent)
 AAP.BrutallCC.BrutallFrame:SetWidth(1)
@@ -13,14 +13,18 @@ AAP.BrutallCC.TargetTimer = 0
 
 function AAP_BrutallShoFunc(AAPCID)
 	local Wheight = 0
-	if (AAP.BrutallCC.BrutalCCList[AAPCID]["Interruptable"]) then
+	local capabilities = AAP.Data:NPCFor(AAPCID)
+	if (not capabilities) then
+		return
+	end
+	if (capabilities["Interruptable"]) then
 		Wheight = Wheight + 1
 		AAP.BrutallCC.BrutallFrame.FS1:Show()
 		AAP.BrutallCC.BrutallFrame.FS1:SetPoint("TOPLEFT",AAP.BrutallCC.BrutallFrame.Frame,"TOPLEFT",5,5)
 	else
 		AAP.BrutallCC.BrutallFrame.FS1:Hide()
 	end
-	if (AAP.BrutallCC.BrutalCCList[AAPCID]["Stunable"]) then
+	if (capabilities["Stunable"]) then
 		Wheight = Wheight + 1
 		AAP.BrutallCC.BrutallFrame.FS2:Show()
 		if (Wheight == 1) then
@@ -31,7 +35,7 @@ function AAP_BrutallShoFunc(AAPCID)
 	else
 		AAP.BrutallCC.BrutallFrame.FS2:Hide()
 	end
-	if (AAP.BrutallCC.BrutalCCList[AAPCID]["Fearable"]) then
+	if (capabilities["Fearable"]) then
 		Wheight = Wheight + 1
 		AAP.BrutallCC.BrutallFrame.FS3:Show()
 		if (Wheight == 1) then
@@ -47,356 +51,7 @@ function AAP_BrutallShoFunc(AAPCID)
 	AAP.BrutallCC.BrutallFrame.Frame:SetHeight((20*Wheight)+5)
 
 end
-AAP.BrutallCC.BrutalCCList = {
-	[131515] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[120951] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[123007] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127079] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[124801] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[122666] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[128770] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[124976] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[137089] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[122754] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[131153] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[139440] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[124977] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[126890] = {
-		["Fearable"] = 1,
-		["Stunable"] = 1,
-		["Interruptable"] = 1,
-	},
-	[128184] = {
-		["Interruptable"] = 1,
-	},
-	[122866] = {
-		["Fearable"] = 1,
-		["Stunable"] = 1,
-	},
-	[133980] = {
-		["Interruptable"] = 1,
-	},
-	[120850] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[141521] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[124978] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[126891] = {
-		["Fearable"] = 1,
-		["Stunable"] = 1,
-		["Interruptable"] = 1,
-	},
-	[133140] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[120946] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[134601] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127074] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[123653] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127225] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[123550] = {
-		["Stunable"] = 1,
-	},
-	[133570] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[123328] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[136428] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[139365] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[133539] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[123757] = {
-		["Stunable"] = 1,
-	},
-	[128472] = {
-		["Stunable"] = 1,
-	},
-	[136334] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127766] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[125996] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127298] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[126703] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[137082] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[131256] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[130466] = {
-		["Fearable"] = 1,
-		["Stunable"] = 1,
-	},
-	[126616] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[132650] = {
-		["Stunable"] = 1,
-	},
-	[127394] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[132230] = {
-		["Stunable"] = 1,
-	},
-	[133400] = {
-		["Stunable"] = 1,
-	},
-	[129323] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[120949] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127072] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[128712] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[130948] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[128728] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[130260] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[137084] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[134052] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[122664] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[130713] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[128474] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[124085] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[133297] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[124652] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[122204] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[131241] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[120950] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[129848] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[132979] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[124088] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[126316] = {
-		["Fearable"] = 1,
-		["Stunable"] = 1,
-	},
-	[130741] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[131555] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[121504] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[130412] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[125328] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127919] = {
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[127935] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-		["Fearable"] = 1,
-	},
-	[126888] = {
-		["Stunable"] = 1,
-		["Interruptable"] = 1,
-	},
-	[127073] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[133172] = {
-		["Interruptable"] = 1,
-		["Stunable"] = 1,
-	},
-	[133472] = {
-		["Interruptable"] = 1,
-	},
-}
+AAP.BrutallCC.BrutalCCList = AAP.Data.NPCSources.BrutalCCList
 
 
 function AAP_BrutallPaintFunc()
@@ -523,7 +178,7 @@ AAP.BrutallCC.BrutallEvents:SetScript("OnEvent", function(self, event, ...)
 			local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",guid);
 			if (type == "Creature" and npc_id and name) then
 				if (UnitIsDead("mouseover") == false) then
-					if (AAP.BrutallCC.BrutalCCList[tonumber(npc_id)]) then
+					if (AAP.Data:NPCFor(tonumber(npc_id))) then
 						AAP.BrutallCC.BrutallFrame.FS4:SetText(name)
 						AAP.BrutallCC.Timer = 9
 						AAP_BrutallShoFunc(tonumber(npc_id))
@@ -571,7 +226,7 @@ AAP.BrutallCC.BrutallEvents:SetScript("OnEvent", function(self, event, ...)
 			local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",guid);
 			if (npc_id) then
 				if (UnitIsDead("target") == false) then
-					if (AAP.BrutallCC.BrutalCCList[tonumber(npc_id)]) then
+					if (AAP.Data:NPCFor(tonumber(npc_id))) then
 						AAP.BrutallCC.BrutallFrame.FS4:SetText(name)
 						AAP.BrutallCC.TargetTimer = 1
 						AAP.BrutallCC.Timer = 9
