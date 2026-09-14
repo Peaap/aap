@@ -720,42 +720,6 @@ local function AAP_PrintQStep()
 		print("AAP_PrintQStep() Step:".. CurStep)
 	end
 	AAP_SendGroup()
-	if (AAP.SettingsOpen == 1) then
-		if (AAP1[AAP.Realm][AAP.Name]["Settings"]["ShowQList"] == 0) then
-			return
-		end
-		LineNr = LineNr + 1
-		AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("Test Quest number 1")
-		AAP.QuestList.QuestFrames[LineNr]:Show()
-		AAP.QuestList.QuestFrames["FS"..LineNr]["Button"]:Hide()
-		local aapwidth = AAP.QuestList.QuestFrames["FS"..LineNr]:GetStringWidth()
-		if (aapwidth and aapwidth > 400) then
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(aapwidth+10)
-		else
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(410)
-		end
-		LineNr = LineNr + 1
-		AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("Test Quest number 2")
-		AAP.QuestList.QuestFrames[LineNr]:Show()
-		AAP.QuestList.QuestFrames["FS"..LineNr]["Button"]:Hide()
-		local aapwidth = AAP.QuestList.QuestFrames["FS"..LineNr]:GetStringWidth()
-		if (aapwidth and aapwidth > 400) then
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(aapwidth+10)
-		else
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(410)
-		end
-		LineNr = LineNr + 1
-		AAP.QuestList.QuestFrames["FS"..LineNr]:SetText("Test Quest number 3")
-		AAP.QuestList.QuestFrames[LineNr]:Show()
-		AAP.QuestList.QuestFrames["FS"..LineNr]["Button"]:Hide()
-		local aapwidth = AAP.QuestList.QuestFrames["FS"..LineNr]:GetStringWidth()
-		if (aapwidth and aapwidth > 400) then
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(aapwidth+10)
-		else
-			AAP.QuestList.QuestFrames[LineNr]:SetWidth(410)
-		end
-		return
-	end
 	if (AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 		local steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
 		local StepP, IdList
@@ -4450,8 +4414,13 @@ local function AAP_PosTest()
 		end
 	end
 end
-local function AAP_LoopBookingFunc()
-	local TestaAAP = 0
+local AAP_BookingElapsed = 0
+local function AAP_LoopBookingFunc(_, elapsed)
+	AAP_BookingElapsed = AAP_BookingElapsed + (elapsed or 0)
+	if (AAP_BookingElapsed < 0.1) then
+		return
+	end
+	AAP_BookingElapsed = AAP_BookingElapsed - 0.1
 	if (AAP.BookingList["OpenedSettings"]) then
 		AAP.BookingList["OpenedSettings"] = nil
 		AAP.ArrowActive = 1
@@ -4462,7 +4431,7 @@ local function AAP_LoopBookingFunc()
 		AAP.ArrowActive_X = AAP.ArrowActive_X + 150
 		AAP["Icons"][1].A = 1
 		AAP.BookingList["PrintQStep"] = 1
-		TestaAAP = "OpenedSettings"
+		-- "OpenedSettings"
 	elseif (AAP.BookingList["ClosedSettings"]) then
 		if (not InCombatLockdown()) then
 			AAP.BookingList["ClosedSettings"] = nil
@@ -4478,33 +4447,33 @@ local function AAP_LoopBookingFunc()
 			AAP.BookingList["UpdateQuest"] = 1
 			AAP.BookingList["PrintQStep"] = 1
 		end
-		TestaAAP = "ClosedSettings"
+		-- "ClosedSettings"
 	elseif (AAP.BookingList["UpdateMapId"]) then
 		AAP.BookingList["UpdateMapId"] = nil
 		AAP_UpdateMapId()
 		if (AAP1["Debug"]) then
 			print("LoopBookingFunc:UpdateMapId:"..AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap])
 		end
-		TestaAAP = "UpdateMapId"
+		-- "UpdateMapId"
 	elseif (AAP.BookingList["AcceptQuest"]) then
 		AAP.BookingList["AcceptQuest"] = nil
 		C_Timer.After(0.2, AAP_AcceptQuester)
-		TestaAAP = "AcceptQuest"
+		-- "AcceptQuest"
 	elseif (AAP.BookingList["CompleteQuest"]) then
 		AAP.BookingList["CompleteQuest"] = nil
 		CompleteQuest()
-		TestaAAP = "CompleteQuest"
+		-- "CompleteQuest"
 	elseif (AAP.BookingList["CreateMacro"]) then
 		AAP.BookingList["CreateMacro"] = nil
 		AAP_CreateMacro()
-		TestaAAP = "CreateMacro"
+		-- "CreateMacro"
 	elseif (AAP.BookingList["AddQuest"]) then
 		if (AAP1["Debug"]) then
 			print("LoopBookingFunc:AddQuest:"..AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap])
 		end
 		AAP_AddQuest(AAP.BookingList["AddQuest"])
 		AAP.BookingList["AddQuest"] = nil
-		TestaAAP = "AddQuest"
+		-- "AddQuest"
 	elseif (AAP.BookingList["RemoveQuest"]) then
 		if (AAP1["Debug"]) then
 			print("LoopBookingFunc:RemoveQuest:"..AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap])
@@ -4513,37 +4482,37 @@ local function AAP_LoopBookingFunc()
 		AAP.BookingList["RemoveQuest"] = nil
 		AAP.BookingList["UpdateMapId"] = 1
 		AAP.BookingList["PrintQStep"] = 1
-		TestaAAP = "RemoveQuest"
+		-- "RemoveQuest"
 	elseif (AAP.BookingList["UpdateQuest"]) then
 		if (AAP1["Debug"]) then
 			print("LoopBookingFunc:UpdateQuest:"..AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap])
 		end
 		AAP.BookingList["UpdateQuest"] = nil
 		AAP_UpdateQuest()
-		TestaAAP = "UpdateQuest"
+		-- "UpdateQuest"
 	elseif (AAP.BookingList["PrintQStep"]) then
 		if (AAP1["Debug"]) then
 			print("LoopBookingFunc:PrintQStep:"..AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap])
 		end
 		AAP.BookingList["PrintQStep"] = nil
 		AAP_PrintQStep()
-		TestaAAP = "PrintQStep"
+		-- "PrintQStep"
 	elseif (AAP.BookingList["UpdateILVLGear"]) then
 		AAP.BookingList["UpdateILVLGear"] = nil
 		AAP_UpdateILVLGear()
-		TestaAAP = "UpdateILVLGear"
+		-- "UpdateILVLGear"
 	elseif (AAP.BookingList["CheckSaveOldSlot"]) then
 		AAP.BookingList["CheckSaveOldSlot"] = nil
 		AAP_CheckSaveOldSlot()
-		TestaAAP = "CheckSaveOldSlot"
+		-- "CheckSaveOldSlot"
 	elseif (AAP.BookingList["SetQPTT"]) then
 		AAP.BookingList["SetQPTT"] = nil
 		AAP_SetQPTT()
-		TestaAAP = "SetQPTT"
+		-- "SetQPTT"
 	elseif (AAP.BookingList["UseTaxiFunc"]) then
 		AAP.BookingList["UseTaxiFunc"] = nil
 		AAP_UseTaxiFunc()
-		TestaAAP = "UseTaxiFunc"
+		-- "UseTaxiFunc"
 	elseif (AAP.BookingList["TestTaxiFunc"]) then
 		AAP_AntiTaxiLoop = AAP_AntiTaxiLoop + 1
 		if (UnitOnTaxi("player")) then
@@ -4560,13 +4529,13 @@ local function AAP_LoopBookingFunc()
 			AAP.BookingList["TestTaxiFunc"] = nil
 			AAP_AntiTaxiLoop = 0
 		end
-		TestaAAP = "TestTaxiFunc"
+		-- "TestTaxiFunc"
 	elseif (AAP.BookingList["SkipCutscene"]) then
 		AAP.BookingList["SkipCutscene"] = nil
 		CinematicFrame_CancelCinematic()
 		C_Timer.After(1, CinematicFrame_CancelCinematic)
 		C_Timer.After(3, CinematicFrame_CancelCinematic)
-		TestaAAP = "SkipCutscene"
+		-- "SkipCutscene"
 	elseif (AAP.BookingList["ButtonSpellidchk"]) then
 		for AAP_index,AAP_value in pairs(AAP.BookingList["ButtonSpellidchk"]) do
 			if (AAP_value) then
@@ -4577,11 +4546,11 @@ local function AAP_LoopBookingFunc()
 			end
 		end
 		AAP.BookingList["ButtonSpellidchk"] = nil
-		TestaAAP = "ButtonSpellidchk"
+		-- "ButtonSpellidchk"
 	elseif (AAP.BookingList["Heirloomscheck"]) then
 		AAP.BookingList["Heirloomscheck"] = nil
 		AAP_Heirloomscheck()
-		TestaAAP = "Heirloomscheck"
+		-- "Heirloomscheck"
 	end
 	if (AAP1 and AAP1[AAP.Realm][AAP.Name] and AAP1[AAP.Realm][AAP.Name]["Settings"] and AAP1[AAP.Realm][AAP.Name]["Settings"]["ArrowFPS"] and AAP_ArrowUpdateNr >= AAP1[AAP.Realm][AAP.Name]["Settings"]["ArrowFPS"]) then
 		AAP_PosTest()
@@ -4589,9 +4558,6 @@ local function AAP_LoopBookingFunc()
 	else
 		AAP_ArrowUpdateNr = AAP_ArrowUpdateNr + 1
 	end
-	--if (TestaAAP ~= 0) then
-	--	print("** "..TestaAAP)
-	--end
 end
 local function AAP_BuyMerchFunc()
 	local i

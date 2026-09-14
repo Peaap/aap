@@ -23,5 +23,4 @@ QuestHandler.lua
 zones\Alliance.lua
 zones\Horde.lua
 zones\Both.lua
-Minimap.lua
 QuestTest.lua

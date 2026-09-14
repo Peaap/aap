@@ -146,8 +146,13 @@ function AAP.ZoneQuestOrderList()
 	guideWindow:SetLayout("Fill")
 	guideWindow:SetWidth(340)
 	guideWindow:SetHeight(440)
+	guideWindow.frame:SetFrameStrata("DIALOG")
 	guideWindow.frame:ClearAllPoints()
-	guideWindow.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	if (AAP.OptionsFrame and AAP.OptionsFrame.MainFrame) then
+		guideWindow.frame:SetPoint("LEFT", AAP.OptionsFrame.MainFrame, "RIGHT", 20, 0)
+	else
+		guideWindow.frame:SetPoint("CENTER", UIParent, "CENTER", 440, 0)
+	end
 	guideWindow.frame:SetMovable(true)
 	guideWindow.frame:EnableMouse(true)
 	guideWindow:SetCallback("OnClose", function()
@@ -203,7 +208,7 @@ function AAP.ZoneQuestOrderList()
 	AAP.ZoneQuestOrder["AAP_Button"]:SetWidth(15)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetHeight(15)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetText("X")
-	AAP.ZoneQuestOrder["AAP_Button"]:SetFrameStrata("MEDIUM")
+	AAP.ZoneQuestOrder["AAP_Button"]:SetFrameStrata("DIALOG")
 	AAP.ZoneQuestOrder["AAP_Button"]:SetPoint("TOPRIGHT",AAP.ZoneQuestOrder,"TOPRIGHT",5,5)
 	AAP.ZoneQuestOrder["AAP_Button"]:SetNormalFontObject("GameFontNormalLarge")
 	AAP.ZoneQuestOrder["AAP_Buttonntex"] = AAP.ZoneQuestOrder["AAP_Button"]:CreateTexture()
@@ -550,46 +555,59 @@ function AAP.UpdateZoneQuestOrderList(AAPmod)
 			return panel.CompactTracker
 		end
 
-		local tracker = CreateFrame("Frame", nil, panel)
-		tracker:SetFrameStrata("DIALOG")
-		tracker:SetFrameLevel(panel:GetFrameLevel() + 10)
-		tracker:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -34)
+		local AceGUI = LibStub("AceGUI-3.0")
+		local tracker = AceGUI:Create("ScrollFrame")
+		tracker:SetLayout("List")
 		tracker:SetWidth(320)
+		tracker:SetHeight(300)
+		tracker.frame:SetParent(panel)
+		tracker.frame:SetFrameStrata("DIALOG")
+		tracker.frame:SetFrameLevel(panel:GetFrameLevel() + 10)
+		tracker.frame:ClearAllPoints()
+		tracker.frame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -34)
 		tracker.Rows = {}
-		tracker.Footer = CreateFrame("Frame", nil, tracker)
-		tracker.Footer:SetPoint("TOPLEFT", tracker, "TOPLEFT", 0, -234)
-		tracker.Footer:SetWidth(320)
-		tracker.Footer.Chips = {}
 
 		for index = 1, 6 do
-			local row = CreateFrame("Frame", nil, tracker)
-			row:SetPoint("TOPLEFT", tracker, "TOPLEFT", 0, -((index - 1) * 38))
-			row:SetWidth(320)
-			row:SetHeight(34)
-			AAP_StyleTrackerRow(row, false)
-			row.Icon = row:CreateTexture(nil, "ARTWORK")
-			row.Icon:SetPoint("LEFT", row, "LEFT", 6, 0)
-			row.Icon:SetWidth(26)
-			row.Icon:SetHeight(26)
+			local row = AceGUI:Create("InteractiveLabel")
+			row:SetFullWidth(true)
+			row:SetHeight(38)
+			row.frame:SetBackdrop({
+				bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+				tile = true, tileSize = 8, edgeSize = 8,
+				insets = { left = 2, right = 2, top = 2, bottom = 2 },
+			})
+			row.Icon = row.frame:CreateTexture(nil, "ARTWORK")
+			row.Icon:SetPoint("LEFT", row.frame, "LEFT", 6, 0)
+			row.Icon:SetSize(26, 26)
 			row.Icon:SetTexture("Interface\\AddOns\\AAP-Core\\Img\\Icon.tga")
-			row.Title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			row.Title:SetPoint("TOPLEFT", row, "TOPLEFT", 40, -3)
-			row.Title:SetWidth(270)
-			row.Title:SetJustifyH("LEFT")
-			row.Subtitle = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-			row.Subtitle:SetPoint("TOPLEFT", row.Title, "BOTTOMLEFT", 0, -1)
-			row.Subtitle:SetWidth(270)
-			row.Subtitle:SetJustifyH("LEFT")
-			row:EnableMouseWheel(true)
-			row:SetScript("OnMouseWheel", function(_, delta)
+			row.label:ClearAllPoints()
+			row.label:SetPoint("LEFT", row.frame, "LEFT", 40, 0)
+			row.label:SetPoint("RIGHT", row.frame, "RIGHT", -6, 0)
+			row.label:SetJustifyH("LEFT")
+			row.label:SetJustifyV("MIDDLE")
+			row.frame:EnableMouseWheel(true)
+			row.frame:SetScript("OnMouseWheel", function(_, delta)
 				local onWheel = panel:GetScript("OnMouseWheel")
 				if (onWheel) then
 					onWheel(panel, delta)
 				end
 			end)
-			row:Hide()
+			tracker:AddChild(row)
 			tracker.Rows[index] = row
 		end
+
+		tracker.Footer = AceGUI:Create("InteractiveLabel")
+		tracker.Footer:SetFullWidth(true)
+		tracker.Footer:SetHeight(28)
+		tracker.Footer.label:SetJustifyH("LEFT")
+		tracker.Footer.frame:EnableMouseWheel(true)
+		tracker.Footer.frame:SetScript("OnMouseWheel", function(_, delta)
+			local onWheel = panel:GetScript("OnMouseWheel")
+			if (onWheel) then onWheel(panel, delta) end
+		end)
+		tracker:AddChild(tracker.Footer)
+
 		panel.CompactTracker = tracker
 		return tracker
 	end
@@ -634,118 +652,103 @@ function AAP.UpdateZoneQuestOrderList(AAPmod)
 	end
 
 	local function buildFallbackRows()
-		if (AAP.Level <= 59 or AAP.Level >= 80) then
-			return {}
-		end
-		if (not IsAddOnLoaded("AAP-TBC-WotLK")) then
-			LoadAddOn("AAP-TBC-WotLK")
-		end
-		local routeKey = AAP.Faction == "Alliance" and "A114-60-83" or "114-60-83"
-		local route = AAP.QuestStepList and AAP.QuestStepList[routeKey]
+		local routeKey = AAP.ActiveMap
+		local route = AAP.QuestStepList and routeKey and AAP.QuestStepList[routeKey]
 		if (not route) then
+			if (AAP.BookingList) then
+				AAP.BookingList["UpdateMapId"] = 1
+			end
 			return {}
 		end
-		local routeStep = AAP1[AAP.Realm][AAP.Name][routeKey] or 1
+		local character = AAP1 and AAP1[AAP.Realm] and AAP1[AAP.Realm][AAP.Name]
+		local routeStep = tonumber(character and character[routeKey]) or 1
+		if (routeStep < 1) then
+			routeStep = 1
+		end
 		local rows = {}
 		for index = routeStep, routeStep + 12 do
 			local step = route[index]
-			if (not step or #rows >= 6) then
+			if (#rows >= 6) then
 				break
 			end
-			local questID
-			local action = "Continue the Borean Tundra guide"
-			if (step.PickUp) then
-				questID = step.PickUp[1]
-				action = "Pick up quest"
-			elseif (step.Done) then
-				questID = step.Done[1]
-				action = "Hand in quest"
-			elseif (step.Qpart) then
-				for id in pairs(step.Qpart) do
-					questID = id
-					break
+			if (step) then
+				local questID
+				local action = "Continue the guide"
+				if (step.PickUp) then
+					questID = step.PickUp[1]
+					action = "Pick up quest"
+				elseif (step.Done) then
+					questID = step.Done[1]
+					action = "Hand in quest"
+				elseif (step.Qpart) then
+					for id in pairs(step.Qpart) do
+						questID = id
+						break
+					end
+					action = "Complete quest objective"
+				elseif (step.CRange) then
+					questID = step.CRange
+					action = "Run to waypoint"
+				elseif (step.GetFP) then
+					questID = step.GetFP
+					action = "Get flight path"
+				elseif (step.UseFlightPath) then
+					questID = step.UseFlightPath
+					action = "Use flight path"
+				elseif (step.UseHS) then
+					action = "Use hearthstone"
+				elseif (step.SetHS) then
+					action = "Set hearthstone"
 				end
-				action = "Complete quest objective"
-			elseif (step.CRange) then
-				questID = step.CRange
-				action = "Run to waypoint"
-			elseif (step.GetFP) then
-				questID = step.GetFP
-				action = "Get flight path"
-			elseif (step.UseFlightPath) then
-				questID = step.UseFlightPath
-				action = "Use flight path"
-			elseif (step.UseHS) then
-				action = "Use hearthstone"
-			elseif (step.SetHS) then
-				action = "Set hearthstone"
+				local title = questID and (AAP_ResolveQuestName(questID) or tostring(questID)) or action
+				table.insert(rows, { title = title, subtitle = action, r = 0.95, g = 0.78, b = 0.28, current = index == routeStep, detail = questID ~= nil })
 			end
-			local title = questID and (AAP_ResolveQuestName(questID) or tostring(questID)) or action
-			table.insert(rows, { title = title, subtitle = action, r = 0.95, g = 0.78, b = 0.28, current = index == routeStep, detail = questID ~= nil })
 		end
 		return rows
 	end
 
 	local function renderCompactTracker(panel, rows)
 		local tracker = ensureCompactTracker(panel)
-		tracker:Show()
+		tracker.frame:Show()
 		for index = 1, 6 do
 			local row = tracker.Rows[index]
 			local data = rows[index]
 			if (data) then
-				row.Title:SetText(data.title)
-				row.Subtitle:SetText(data.subtitle)
-				row.Title:SetTextColor(data.r or 1, data.g or 1, data.b or 1)
-				row.Subtitle:SetTextColor(0.78, 0.68, 0.42)
+				local r, g, b = data.r or 1, data.g or 1, data.b or 1
+				local title = data.title or ""
+				local subtitle = data.subtitle or ""
+				row:SetText(string.format("|cff%02x%02x%02x%s|r\n|cffc7ad6b%s|r", r * 255, g * 255, b * 255, title, subtitle))
 				if (data.current) then
-					row:SetBackdropColor(0.12, 0.1, 0.05, 0.98)
+					row.frame:SetBackdropColor(0.12, 0.10, 0.05, 0.98)
 					row.Icon:SetVertexColor(0.95, 0.78, 0.28, 1)
 				elseif (data.detail) then
-					row:SetBackdropColor(0.06, 0.055, 0.045, 0.9)
+					row.frame:SetBackdropColor(0.06, 0.055, 0.045, 0.9)
 					row.Icon:SetVertexColor(0.72, 0.55, 0.18, 0.85)
 				else
-					row:SetBackdropColor(0.05, 0.045, 0.038, 0.9)
-					row.Icon:SetVertexColor(data.r or 1, data.g or 1, data.b or 1, 0.9)
+					row.frame:SetBackdropColor(0.05, 0.045, 0.038, 0.9)
+					row.Icon:SetVertexColor(r, g, b, 0.9)
 				end
-				row:Show()
+				row.frame:Show()
 			else
-				row:Hide()
+				row.frame:Hide()
 			end
 		end
 	end
 
 	local function renderCompactRoute(panel)
 		local tracker = ensureCompactTracker(panel)
-		local footer = tracker.Footer
-		local chipIndex = 0
+		local zones = {}
 		for index = 1, 11 do
 			local zone = AAP.ZoneOrder and AAP.ZoneOrder["Zone" .. index]
 			if (zone and zone:IsShown() and zone.FS) then
-				chipIndex = chipIndex + 1
-				local chip = footer.Chips[chipIndex]
-				if (not chip) then
-					chip = CreateFrame("Frame", nil, footer)
-					chip:SetHeight(20)
-					AAP_StyleTrackerRow(chip, false)
-					chip.Text = chip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-					chip.Text:SetPoint("CENTER", chip, "CENTER", 0, 0)
-					footer.Chips[chipIndex] = chip
-				end
-				local previous = footer.Chips[chipIndex - 1]
-				chip:ClearAllPoints()
-				if (previous) then
-					chip:SetPoint("LEFT", previous, "RIGHT", 7, 0)
-				else
-					chip:SetPoint("TOPLEFT", footer, "TOPLEFT", 0, 0)
-				end
-				chip.Text:SetText(zone.FS:GetText() or "")
-				chip.Text:SetTextColor(zone.FS:GetTextColor())
-				chip:SetWidth(chip.Text:GetStringWidth() + 16)
-				chip:Show()
+				table.insert(zones, zone.FS:GetText() or "")
 			end
 		end
-		for index = chipIndex + 1, #footer.Chips do
-			footer.Chips[index]:Hide()
+		if (#zones > 0) then
+			tracker.Footer:SetText("|cffd6b861Route:|r " .. table.concat(zones, " |cff8a6a30> |r"))
+			tracker.Footer.frame:Show()
+		else
+			tracker.Footer.frame:Hide()
 		end
 		if (AAP.ZoneOrder) then
 			AAP.ZoneOrder:Hide()
@@ -1335,9 +1338,7 @@ function AAP.UpdateZoneQuestOrderList(AAPmod)
 	end
 	renderCompactTracker(AAP.ZoneQuestOrder, visibleRows)
 	renderCompactRoute(AAP.ZoneQuestOrder)
-	if (#visibleRows > 0) then
-		hideLegacyRows(AAP.ZoneQuestOrder)
-	end
+	hideLegacyRows(AAP.ZoneQuestOrder)
 end
 function AAP.MakeMapOrderIcons(IdZs)
 	AAP["MapZoneIcons"][IdZs] = CreateFrame("Frame",nil,UIParent)
