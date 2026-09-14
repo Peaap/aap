@@ -11,6 +11,10 @@ AAP.UI._listeners = AAP.UI._listeners or {}
 AAP.UI._nextListenerId = AAP.UI._nextListenerId or 0
 AAP.UI._window = AAP.UI._window or nil
 AAP.UI._tabs = AAP.UI._tabs or nil
+AAP.UI._tabContainers = AAP.UI._tabContainers or nil
+AAP.UI._tabScrolls = AAP.UI._tabScrolls or nil
+AAP.UI._activeTabContainer = AAP.UI._activeTabContainer or nil
+AAP.UI._selectedTab = AAP.UI._selectedTab or "guide"
 AAP.UI._refreshing = false
 AAP.UI._guide = AAP.UI._guide or nil
 
@@ -44,14 +48,6 @@ end
 
 local function safeText(value)
     return value == nil and "" or tostring(value)
-end
-
-local function countTable(t)
-    local n = 0
-    if type(t) == "table" then
-        for _ in pairs(t) do n = n + 1 end
-    end
-    return n
 end
 
 local function sortedQuestIds(active)
@@ -142,6 +138,7 @@ local function addIconLabel(container, icon, text)
     group:AddChild(image)
     local label = addLabel(group, text)
     label:SetWidth(420)
+    group:AddChild(label)
     container:AddChild(group)
     return group
 end
@@ -226,6 +223,70 @@ function AAP.UI:HookWindowMovement(window)
     end)
 end
 
+function AAP.UI:CreateTabContainer()
+    local outer = AceGUI:Create("SimpleGroup")
+    outer:SetFullWidth(true)
+    outer:SetFullHeight(true)
+    outer:SetLayout("Fill")
+
+    local scroll = AceGUI:Create("ScrollFrame")
+    scroll:SetFullWidth(true)
+    scroll:SetFullHeight(true)
+    scroll:SetLayout("Flow")
+    outer:AddChild(scroll)
+
+    return outer, scroll
+end
+
+function AAP.UI:BuildTabContainers()
+    self._tabContainers = {}
+    self._tabScrolls = {}
+    local names = { "guide", "quests", "route", "settings" }
+    for _, name in ipairs(names) do
+        local outer, scroll = self:CreateTabContainer()
+        self._tabContainers[name] = outer
+        self._tabScrolls[name] = scroll
+    end
+end
+
+function AAP.UI:DetachActiveTabContainer()
+    local tabs = self._tabs
+    local active = self._activeTabContainer
+    if not tabs or not active then return end
+    for i = #tabs.children, 1, -1 do
+        if tabs.children[i] == active then
+            table.remove(tabs.children, i)
+            break
+        end
+    end
+    active.frame:Hide()
+    active.parent = nil
+    self._activeTabContainer = nil
+end
+
+function AAP.UI:AttachTabContainer(group)
+    local tabs = self._tabs
+    local container = self._tabContainers and self._tabContainers[group]
+    if not tabs or not container then return end
+    if self._activeTabContainer == container then return end
+    self:DetachActiveTabContainer()
+    tabs:AddChild(container)
+    self._activeTabContainer = container
+end
+
+function AAP.UI:ReleaseTabContainers()
+    local containers = self._tabContainers
+    self._tabContainers = nil
+    self._tabScrolls = nil
+    self._activeTabContainer = nil
+    if not containers then return end
+    for _, container in pairs(containers) do
+        if container and container.parent ~= self._tabs then
+            AceGUI:Release(container)
+        end
+    end
+end
+
 function AAP.UI:EnsureWindow()
     if self._window then
         self:ApplyWindowSettings()
@@ -241,7 +302,19 @@ function AAP.UI:EnsureWindow()
     window:SetLayout("Fill")
     window:SetCallback("OnClose", function(widget)
         self._window = nil
+        local containers = self._tabContainers
+        self._tabContainers = nil
+        self._tabScrolls = nil
+        self._activeTabContainer = nil
+        self._tabs = nil
         AceGUI:Release(widget)
+        if containers then
+            for _, container in pairs(containers) do
+                if container and container.parent == nil then
+                    AceGUI:Release(container)
+                end
+            end
+        end
     end)
     self._window = window
     self:HookWindowMovement(window)
@@ -250,33 +323,44 @@ function AAP.UI:EnsureWindow()
     local tabs = AceGUI:Create("TabGroup")
     tabs:SetFullWidth(true)
     tabs:SetFullHeight(true)
-    tabs:SetLayout("Flow")
+    tabs:SetLayout("Fill")
     tabs:SetTabs({
         { text = "Guide", value = "guide" },
         { text = "Quests", value = "quests" },
         { text = "Route", value = "route" },
         { text = "Settings", value = "settings" },
     })
-    tabs:SetCallback("OnGroupSelected", function(widget, event, group)
+    tabs:SetCallback("OnGroupSelected", function(_, _, group)
+        self._selectedTab = group
         self:RenderTab(group)
     end)
     window:AddChild(tabs)
     self._tabs = tabs
-    tabs:SelectTab("guide")
+    self:BuildTabContainers()
+    tabs:SelectTab(self._selectedTab or "guide")
     return window
 end
 
 function AAP.UI:RenderTab(group)
-    if not self._tabs then return end
-    self._tabs:ReleaseChildren()
+    if not self._tabs or not self._tabScrolls then return end
+    group = group or self._selectedTab or "guide"
+    self._selectedTab = group
+    self:AttachTabContainer(group)
+
+    local container = self._tabScrolls[group]
+    if not container then return end
+
+    -- Only the transient content widgets are recycled. The ScrollFrame itself
+    -- survives refreshes, so its scroll position is retained.
+    container:ReleaseChildren()
     if group == "quests" then
-        self:RenderQuests(self._tabs)
+        self:RenderQuests(container)
     elseif group == "route" then
-        self:RenderRoute(self._tabs)
+        self:RenderRoute(container)
     elseif group == "settings" then
-        self:RenderSettings(self._tabs)
+        self:RenderSettings(container)
     else
-        self:RenderGuide(self._tabs)
+        self:RenderGuide(container)
     end
 end
 
@@ -420,7 +504,9 @@ function AAP.UI:RenderSettings(container)
         slider:SetCallback("OnValueChanged", function(_, _, value)
             s[key] = value
             self:ApplyWindowSettings()
-            self:Refresh(self.State)
+            if key == "fontSize" or key == "iconSize" then
+                C_Timer.After(0, function() self:Refresh(self.State) end)
+            end
         end)
         container:AddChild(slider)
     end
@@ -446,7 +532,7 @@ function AAP.UI:RenderSettings(container)
     objectives:SetValue(s.showObjectives)
     objectives:SetCallback("OnValueChanged", function(_, _, value)
         s.showObjectives = value == true
-        self:Refresh(self.State)
+        C_Timer.After(0, function() self:Refresh(self.State) end)
     end)
     container:AddChild(objectives)
 
@@ -455,7 +541,7 @@ function AAP.UI:RenderSettings(container)
     route:SetValue(s.showRoute)
     route:SetCallback("OnValueChanged", function(_, _, value)
         s.showRoute = value == true
-        self:Refresh(self.State)
+        C_Timer.After(0, function() self:Refresh(self.State) end)
     end)
     container:AddChild(route)
 
@@ -484,8 +570,10 @@ function AAP.UI:RenderSettings(container)
         for key, value in pairs(DEFAULTS) do s[key] = value end
         self:ApplyWindowSettings()
         self:EnsureGuide()
-        self:Refresh(self.State)
-        self:UpdateGuide()
+        C_Timer.After(0, function()
+            self:Refresh(self.State)
+            self:UpdateGuide()
+        end)
     end)
     container:AddChild(defaults)
 end
@@ -495,8 +583,7 @@ function AAP.UI:Refresh(state)
     self._refreshing = true
     self.State = state or self.State
     if self._tabs then
-        local selected = self._tabs.status and self._tabs.status.selected or "guide"
-        self:RenderTab(selected)
+        self:RenderTab(self._selectedTab or "guide")
     end
     self._refreshing = false
 end
@@ -595,6 +682,7 @@ SlashCmdList.AAP = function(message)
         print("AceGUI.Create:", AceGUI and type(AceGUI.Create))
         print("Window:", AAP.UI._window ~= nil)
         print("Guide:", AAP.UI._guide ~= nil)
+        print("Selected tab:", AAP.UI._selectedTab or "guide")
         return
     elseif message == "hide" or message == "close" then
         AAP.UI:Hide()
