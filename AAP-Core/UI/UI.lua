@@ -138,7 +138,6 @@ local function addIconLabel(container, icon, text)
     group:AddChild(image)
     local label = addLabel(group, text)
     label:SetWidth(420)
-    group:AddChild(label)
     container:AddChild(group)
     return group
 end
@@ -274,19 +273,6 @@ function AAP.UI:AttachTabContainer(group)
     self._activeTabContainer = container
 end
 
-function AAP.UI:ReleaseTabContainers()
-    local containers = self._tabContainers
-    self._tabContainers = nil
-    self._tabScrolls = nil
-    self._activeTabContainer = nil
-    if not containers then return end
-    for _, container in pairs(containers) do
-        if container and container.parent ~= self._tabs then
-            AceGUI:Release(container)
-        end
-    end
-end
-
 function AAP.UI:EnsureWindow()
     if self._window then
         self:ApplyWindowSettings()
@@ -349,9 +335,6 @@ function AAP.UI:RenderTab(group)
 
     local container = self._tabScrolls[group]
     if not container then return end
-
-    -- Only the transient content widgets are recycled. The ScrollFrame itself
-    -- survives refreshes, so its scroll position is retained.
     container:ReleaseChildren()
     if group == "quests" then
         self:RenderQuests(container)
