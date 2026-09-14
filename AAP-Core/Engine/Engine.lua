@@ -134,6 +134,55 @@ local function routeFor(data, routeKey)
 	return nil
 end
 
+local function firstNumber(value)
+	if type(value) == "number" then return value end
+	if type(value) == "table" then
+		for _, item in ipairs(value) do
+			if type(item) == "number" then return item end
+		end
+	end
+	return nil
+end
+
+local function stepKind(step)
+	if type(step) ~= "table" then return nil end
+	for _, key in ipairs({ "PickUp", "PickUp2", "Qpart", "QpartPart", "Done", "DropQuest", "CRange", "Range", "Trigger", "TT", "GetFP", "UseFlightPath", "SetHS", "UseHS", "UseDalaHS", "UseGarrisonHS", "Treasure", "ZonePick", "ZoneChoice", "ZoneDone", "GroupTask", "Group", "Optional", "QaskPopup" }) do
+		if step[key] ~= nil then return key end
+	end
+	return "Route step"
+end
+
+local function collectStepQuestIds(step)
+	local ids = {}
+	local seen = {}
+	if type(step) ~= "table" then return ids end
+	local function collect(value)
+		if type(value) == "number" then
+			if not seen[value] then seen[value] = true; ids[#ids + 1] = value end
+		elseif type(value) == "table" then
+			for _, item in ipairs(value) do collect(item) end
+			for key, item in pairs(value) do
+				if type(key) ~= "number" then collect(item) end
+			end
+		end
+	end
+	for _, key in ipairs({ "PickUp", "PickUp2", "Qpart", "QpartPart", "Done", "DropQuest", "CRange", "GetFP", "UseFlightPath", "SetHS", "UseHS", "UseDalaHS", "UseGarrisonHS", "Treasure", "ZoneDone", "GroupTask", "Group", "Optional", "QaskPopup" }) do
+		collect(step[key])
+	end
+	table.sort(ids)
+	return ids
+end
+
+local function presentationStep(route, stepIndex)
+	local step = type(route) == "table" and route[stepIndex] or nil
+	if type(step) ~= "table" then return nil end
+	return {
+		kind = stepKind(step),
+		questIds = collectStepQuestIds(step),
+		name = type(step.Name) == "string" and step.Name or nil,
+	}
+end
+
 local function coordinates(value)
 	if (type(value) ~= "table" or type(value.x) ~= "number" or type(value.y) ~= "number") then
 		return nil
@@ -395,6 +444,7 @@ function RouteResolver:Resolve(context, quests, state, data)
 		active = true,
 		routeKey = routeKey,
 		stepIndex = stepIndex,
+		step = presentationStep(route, stepIndex),
 	}
 	resolvedState.navigation = Navigation:For(resolvedState, route)
 	resolvedState.travel = Travel:For(resolvedState, context, route)
@@ -568,11 +618,13 @@ function RouteProgression:AdvanceIfSatisfied(state, context, data)
 	if (save) then
 		save[state.routeKey] = state.stepIndex + 1
 	end
+	local nextIndex = state.stepIndex + 1
 	local nextState = {
 		initialized = state.initialized == true,
 		active = true,
 		routeKey = state.routeKey,
-		stepIndex = state.stepIndex + 1,
+		stepIndex = nextIndex,
+		step = presentationStep(route, nextIndex),
 		quests = state.quests,
 	}
 	nextState.navigation = Navigation:For(nextState, route)

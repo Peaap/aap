@@ -47,6 +47,13 @@ function AAP.Core:BuildPlayerContext(characterData)
 	}
 end
 
+function AAP.Core:PublishEngineState(state)
+	if (AAP.UI and type(AAP.UI.Publish) == "function") then
+		return AAP.UI:Publish(state)
+	end
+	return state
+end
+
 function AAP.Core:StartEngineWhenReady(context)
 	if (self.EngineStarted) then
 		return self.EngineState
@@ -61,6 +68,7 @@ function AAP.Core:StartEngineWhenReady(context)
 	end
 
 	self.EngineState = AAP.Engine:Initialize(context, AAP.Data)
+	self:PublishEngineState(self.EngineState)
 	self.EngineStarted = true
 	AAP.Lifecycle.EngineStarted = true
 	return self.EngineState
@@ -69,6 +77,14 @@ end
 function AAP.Core:OnBootstrapPlayerReady()
 	local characterData = self:EnsureCharacterSavedData()
 	local context = self:BuildPlayerContext(characterData)
+
+	-- UI.lua is evaluated before PLAYER_LOGIN, so it cannot initialize itself
+	-- from the lifecycle flag at file-load time. Initialize it here, after the
+	-- bootstrap has established player readiness and before state is published.
+	if (AAP.UI and type(AAP.UI.Initialize) == "function") then
+		AAP.UI:Initialize()
+	end
+
 	return self:StartEngineWhenReady(context)
 end
 
@@ -82,7 +98,9 @@ function AAP.Core:DispatchLegacyEvent(event, ...)
 	end
 
 	if (AAP.Engine:QueueLegacyEvent(event, ...)) then
-		return AAP.Engine:ProcessPendingEvents()
+		local state = AAP.Engine:ProcessPendingEvents()
+		self.EngineState = state
+		return self:PublishEngineState(state)
 	end
 	return self.EngineState
 end

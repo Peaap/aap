@@ -6,6 +6,9 @@
 ## Author: Zyrrael
 ## Version: 8.1056
 ## SavedVariables: AAP1, AAP2, AAP3, AAPQuestNames, AAP_HoldZoneVar
+lib\LibStub\LibStub.lua
+lib\CallbackHandler-1.0\CallbackHandler-1.0.lua
+lib\AceGUI-3.0\AceGUI-3.0.xml
 Bootstrap.lua
 Data\Data.lua
 Data\Quests.lua
@@ -15,3 +18,4 @@ Data\NPCs.lua
 Data\Routes.lua
 Engine\Engine.lua
 Core\Core.lua
+UI\UI.lua
