@@ -12,6 +12,10 @@ AAP.UI._nextListenerId = AAP.UI._nextListenerId or 0
 AAP.UI._window = AAP.UI._window or nil
 AAP.UI._refreshing = false
 
+-- Resolve AceGUI through LibStub first. Do not depend on a global AceGUI name.
+local AceGUI = (LibStub and LibStub("AceGUI-3.0", true)) or _G.AceGUI
+AAP.UI.Dependencies.AceGUI = AceGUI
+
 local function safeText(value)
     if value == nil then return "" end
     return tostring(value)
@@ -97,9 +101,19 @@ end
 
 function AAP.UI:EnsureWindow()
     if self._window then return self._window end
-    if not AceGUI or type(AceGUI.Create) ~= "function" then return nil end
+
+    if not AceGUI then
+        error("AAP UI: AceGUI-3.0 could not be loaded")
+    end
+    if type(AceGUI.Create) ~= "function" then
+        error("AAP UI: AceGUI-3.0 is loaded but Create() is unavailable")
+    end
 
     local window = AceGUI:Create("Window")
+    if not window then
+        error("AAP UI: AceGUI Window widget could not be created")
+    end
+
     styleFrame(window)
     window:SetCallback("OnClose", function(widget)
         self._window = nil
@@ -162,7 +176,6 @@ function AAP.UI:EnsureWindow()
 
     self._window = window
     self:Refresh(self.State)
-    window:Hide()
     return window
 end
 
@@ -239,9 +252,12 @@ end
 
 function AAP.UI:Show()
     local window = self:EnsureWindow()
-    if not window then return end
+    if not window then return false end
+    if self.State then
+        self:Refresh(self.State)
+    end
     window:Show()
-    self:Refresh(self.State)
+    return true
 end
 
 function AAP.UI:Hide()
@@ -249,11 +265,15 @@ function AAP.UI:Hide()
 end
 
 function AAP.UI:Toggle()
-    if self._window and self._window.frame and self._window.frame:IsShown() then
+    local window = self:EnsureWindow()
+    if not window then return false end
+
+    if window.frame and window.frame:IsShown() then
         self:Hide()
-    else
-        self:Show()
+        return false
     end
+
+    return self:Show()
 end
 
 function AAP.UI:Clear()
@@ -264,11 +284,39 @@ end
 SLASH_AAP1 = "/aap"
 SlashCmdList.AAP = function(message)
     message = string.lower(message or "")
+
+    if not AAP.UI then
+        print("|cffff0000AAP: UI module is not initialized.|r")
+        return
+    end
+
+    -- Defensive initialization: /aap must work independently of lifecycle timing.
+    if type(AAP.UI.Initialize) == "function" then
+        AAP.UI:Initialize()
+    end
+
+    if message == "debug" then
+        print("AAP UI:", AAP.UI ~= nil)
+        print("AAP UI Initialized:", AAP.UI and AAP.UI.Initialized)
+        print("AceGUI:", AceGUI ~= nil)
+        print("AceGUI.Create:", AceGUI and type(AceGUI.Create))
+        print("AAP UI Window:", AAP.UI and AAP.UI._window ~= nil)
+        if AAP.UI and AAP.UI._window then
+            print("Window Frame:", AAP.UI._window.frame ~= nil)
+            if AAP.UI._window.frame then
+                print("Window Shown:", AAP.UI._window.frame:IsShown())
+            end
+        end
+        return
+    end
+
     if message == "hide" or message == "close" then
         AAP.UI:Hide()
     elseif message == "refresh" then
         if AAP.Engine and type(AAP.Engine.RefreshQuestState) == "function" then
             AAP.UI:Publish(AAP.Engine:RefreshQuestState())
+        else
+            AAP.UI:Refresh(AAP.UI.State)
         end
     else
         AAP.UI:Toggle()
@@ -276,7 +324,8 @@ SlashCmdList.AAP = function(message)
 end
 
 -- Lazy initialization: the UI object exists at load, but the Ace3 window is
--- created only after the player is ready. This keeps presentation optional.
+-- created only after the player is ready. Core also initializes it from the
+-- PLAYER_LOGIN / PLAYER_ENTERING_WORLD readiness path.
 if AAP.Lifecycle and AAP.Lifecycle.PlayerReady then
     AAP.UI:Initialize()
 end
