@@ -2623,9 +2623,9 @@ local function AAP_UpdateMapId()
 	local levelcheck100 = 0
 	local levelcheck110 = 0
 	AAP.Level = UnitLevel("player")
+	-- HBD already tracks the player's actual zone map. Route selectors use that ID.
 	local playerMapID = HBD:GetPlayerZone()
-	local continent = playerMapID and HBD:GetCZFromMapID(playerMapID)
-	AAP.ActiveMap = continent and HBD:GetMapIDFromCZ(continent, 0) or playerMapID
+	AAP.ActiveMap = playerMapID
 	if (OldMap and OldMap ~= AAP.ActiveMap) then
 		AAP.BookingList["PrintQStep"] = 1
 	end
@@ -3980,7 +3980,7 @@ local function AAP_UpdateMapId()
 	end
 --------------------------------
 ---- Legion - Horde ------------
-	if ((AAP.Faction == "Horde" and AAP.Level > 99 and AAP.Level < 110) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Horde")) then
+	if ((AAP.Faction == "Horde" and AAP.Level > 99 and AAP.Level < 111) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Horde")) then
 		if (AAP.ActiveMap == 18) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
@@ -4089,7 +4089,7 @@ local function AAP_UpdateMapId()
 	end
 --------------------------------
 ---- Legion - Alliance ---------
-	if ((AAP.Faction == "Alliance" and AAP.Level > 99 and AAP.Level < 110) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Alliance")) then
+	if ((AAP.Faction == "Alliance" and AAP.Level > 99 and AAP.Level < 111) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Alliance")) then
 		if (AAP.ActiveMap == "A84") then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
@@ -4099,9 +4099,7 @@ local function AAP_UpdateMapId()
 					end
 				end
 			end
-			if (AAP.ActiveQuests[40519] or AAP.ActiveQuests[42782]) then
-				AAP.ActiveMap = "A84-100-110"
-			end
+			AAP.ActiveMap = "A84-100-110"
 		end
 		if (AAP.ActiveMap == "A627") then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
@@ -4218,11 +4216,16 @@ local function AAP_UpdateMapId()
 	if (AAP.ActiveQuests and AAP.ActiveQuests[26320] and (playerMapID == 291 or playerMapID == 292)) then
 		AAP.ActiveMap = "ADeadmines"
 	end
+	local route = AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap]
+	if (route and not route[AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]]) then
+		-- Route data changed or saved progress is out of range; restart this route.
+		AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] = 1
+	end
 	if (not AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]) then
 		AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap] = 1
 	end
 	local CurStep = AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]
-	if (CurStep and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
+	if (CurStep and route and route[CurStep]) then
 	else
 		AAP.BookingList["ClosedSettings"] = 1
 	end
