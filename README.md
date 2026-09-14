@@ -2,6 +2,10 @@
 
 Azeroth Auto Pilot (AAP) is a leveling and quest-route addon for **World of Warcraft: Legion 7.3.5** (`Interface: 70300`). It provides step-by-step quest guidance, waypoint arrows, quest objectives, map pins, and leveling routes from level 20 through level 110.
 
+## Project goal
+
+Redeveloping AAP as a dependable, Legion 7.3.5-compatible leveling and quest-route addon while preserving clear step-by-step guidance.
+
 ## Install
 
 1. Download or clone the [`legion-7.3.5-port`](https://github.com/Peaap/aap/tree/legion-7.3.5-port) branch.
