@@ -3,6 +3,8 @@ local AAP_ArrowUpdateNr = 0
 local ETAStep = 0
 local AAP_AntiTaxiLoop = 0
 local Updateblock = 0
+local AAP_PopupPollActive = false
+local AAP_PopupPollTries = 0
 local HBDP = LibStub("HereBeDragons-Pins-1.0")
 local HBD = LibStub("HereBeDragons-1.0")
 local AAPWhereToGo
@@ -53,6 +55,23 @@ local function GetPlayerMapPos(mapID, worldY, worldX)
 
 	local x, y = HBD:GetPlayerZonePosition(true)
 	return x, y
+end
+local function AAP_GetCRangeSegCount(route, CurStep)
+	if (not route or not CurStep) then
+		return 1
+	end
+	local NextStep = route[CurStep+1]
+	if (not NextStep or not NextStep["TT"] or not NextStep["TT"]["x"] or not NextStep["TT"]["y"]) then
+		return 1
+	end
+	if (NextStep["CRange"]) then
+		local NextNextStep = route[CurStep+2]
+		if (NextNextStep and NextNextStep["TT"] and NextNextStep["TT"]["x"] and NextNextStep["TT"]["y"]) then
+			return 3
+		end
+		return 2
+	end
+	return 2
 end
 function AAP.RemoveIcons()
 	for CLi = 1, 20 do
@@ -109,10 +128,7 @@ function AAP:MoveIcons()
 	end
 	if (steps["CRange"]) then
 		local CLi
-		local totalCR = 1
-		if (AAP.QuestStepList[AAP.ActiveMap][CurStep+1] and AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["CRange"]) then
-			totalCR = 3
-		end
+		local totalCR = AAP_GetCRangeSegCount(AAP.QuestStepList[AAP.ActiveMap], CurStep)
 		local px, py = GetPlayerMapPos(playerMapID)
 		local CLi, CLi2
 		for CLi = 1, 20 do
@@ -145,6 +161,7 @@ function AAP:MoveIcons()
 				end
 			end
 		end
+		if (totalCR >= 2) then
 		local px, py = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["x"])
 		local CLi, CLi2
 		local ix, iy = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
@@ -175,6 +192,7 @@ function AAP:MoveIcons()
 					AAP.HBDP:RemoveMinimapIcon("AAP", AAP["Icons"][CLi])
 				end
 			end
+		end
 		end
 		if (totalCR == 3) then
 			local px, py = GetPlayerMapPos(playerMapID, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
@@ -284,10 +302,7 @@ function AAP:MoveMapIcons()
 	end
 	if (steps["CRange"]) then
 		local CLi
-		local totalCR = 1
-		if (AAP.QuestStepList[AAP.ActiveMap][CurStep+1] and AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["CRange"]) then
-			totalCR = 3
-		end
+		local totalCR = AAP_GetCRangeSegCount(AAP.QuestStepList[AAP.ActiveMap], CurStep)
 		local px, py = GetPlayerMapPos(SetMapIDs)
 		local CLi, CLi2
 		for CLi = 1, 20 do
@@ -320,6 +335,7 @@ function AAP:MoveMapIcons()
 				end
 			end
 		end
+		if (totalCR >= 2) then
 		local px, py = GetPlayerMapPos(SetMapIDs, AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep]["TT"]["x"])
 		local CLi, CLi2
 		local ix, iy = GetPlayerMapPos(SetMapIDs, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
@@ -350,6 +366,7 @@ function AAP:MoveMapIcons()
 					AAP.HBDP:RemoveWorldMapIcon("AAPMap", AAP["MapIcons"][CLi])
 				end
 			end
+		end
 		end
 		if (totalCR == 3) then
 			local px, py = GetPlayerMapPos(SetMapIDs, AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["y"],AAP.QuestStepList[AAP.ActiveMap][CurStep+1]["TT"]["x"])
@@ -451,9 +468,9 @@ local function AAP_CheckZoneSteps()
 		if (not AAP1[AAP.Realm][AAP.Name]["CountedZoneSteps"]) then
 			AAP1[AAP.Realm][AAP.Name]["CountedZoneSteps"] = {}
 		end
-		if (not AAP1[AAP.Realm][AAP.Name]["CountedZoneSteps"][AAP.ActiveMap]) then
+		do
 			local count = 0
-			for AAP_index,AAP_value in pairs(AAP.QuestStepList[AAP.ActiveMap]) do
+			while (AAP.QuestStepList[AAP.ActiveMap][count+1]) do
 				count = count + 1
 			end
 			AAP1[AAP.Realm][AAP.Name]["CountedZoneSteps"][AAP.ActiveMap] = count
@@ -493,6 +510,9 @@ local function AAP_ExitVhicle()
 	VehicleExit()
 end
 local function AAP_TaxiSearchFunc(AAPMrX, AAPMrY)
+	if (not tonumber(AAPMrX) or not tonumber(AAPMrY)) then
+		return
+	end
 	AAPMrX = floor(AAPMrX + 0.5)
 	AAPMrY = floor(AAPMrY + 0.5)
 	local CLi
@@ -514,14 +534,24 @@ local function AAP_UseTaxiFunc()
 	if (CurStep and AAP.ActiveMap and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 		steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
 	end
+	if (not steps or not steps["Name"]) then
+		return
+	end
+	local TContonent = AAP.getContinent()
+	if (not TContonent) then
+		return
+	end
 	if (steps["ETA"]) then
 		AAP.AFK_Timer(steps["ETA"])
 	end
 	local AllyBoatOrNot = "Flight"
 	if (AAP.Faction == "Alliance") then
-		local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",UnitGUID("target"))
-		if (npc_id and AAP.AllyBoatNpcs[tonumber(npc_id)]) then
-			AllyBoatOrNot = "Boat"
+		local AAPTargetGUID = UnitGUID("target")
+		if (AAPTargetGUID) then
+			local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",AAPTargetGUID)
+			if (npc_id and AAP.AllyBoatNpcs[tonumber(npc_id)]) then
+				AllyBoatOrNot = "Boat"
+			end
 		end
 	end
 	if (GetLocale() == "enUS") then
@@ -537,44 +567,66 @@ local function AAP_UseTaxiFunc()
 				if (not AAP.FPs[AAP.Faction]) then
 					AAP.FPs[AAP.Faction] = {}
 				end
-				if (not AAP.FPs[AAP.Faction][AAP.getContinent()]) then
-					AAP.FPs[AAP.Faction][AAP.getContinent()] = {}
+				if (not AAP.FPs[AAP.Faction][TContonent]) then
+					AAP.FPs[AAP.Faction][TContonent] = {}
 				end
-				if (AAP.Faction == "Alliance" and 876 == AAP.getContinent()) then
-					if (not AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot]) then
-						AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot] = {}
+				if (AAP.Faction == "Alliance" and 876 == TContonent) then
+					if (not AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot]) then
+						AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot] = {}
 					end
-					if (not AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot][TaxiNodeName(CLi)]) then
-						AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot][TaxiNodeName(CLi)] = {}
+					if (not AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TaxiNodeName(CLi)]) then
+						AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TaxiNodeName(CLi)] = {}
 					end
-					AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot][TaxiNodeName(CLi)]["x"] = aapx
-					AAP.FPs[AAP.Faction][AAP.getContinent()][AllyBoatOrNot][TaxiNodeName(CLi)]["y"] = aapy
+					AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TaxiNodeName(CLi)]["x"] = aapx
+					AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TaxiNodeName(CLi)]["y"] = aapy
 				else
-					if (not AAP.FPs[AAP.Faction][AAP.getContinent()][TaxiNodeName(CLi)]) then
-						AAP.FPs[AAP.Faction][AAP.getContinent()][TaxiNodeName(CLi)] = {}
+					if (not AAP.FPs[AAP.Faction][TContonent][TaxiNodeName(CLi)]) then
+						AAP.FPs[AAP.Faction][TContonent][TaxiNodeName(CLi)] = {}
 					end
-					AAP.FPs[AAP.Faction][AAP.getContinent()][TaxiNodeName(CLi)]["x"] = aapx
-					AAP.FPs[AAP.Faction][AAP.getContinent()][TaxiNodeName(CLi)]["y"] = aapy
+					AAP.FPs[AAP.Faction][TContonent][TaxiNodeName(CLi)]["x"] = aapx
+					AAP.FPs[AAP.Faction][TContonent][TaxiNodeName(CLi)]["y"] = aapy
 				end
 			end
 		end
 	end
-	if (AAP.Faction == "Alliance" and 876 == AAP.getContinent()) then
+	if (AAP.Faction == "Alliance" and 876 == TContonent) then
 		local TName = steps["Name"]
-		local TContonent = AAP.getContinent()
+		if (not AAP.FPs or not AAP.FPs[AAP.Faction] or not AAP.FPs[AAP.Faction][TContonent] or not AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot] or not AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TName]) then
+			if (AAP1["Debug"]) then
+				print("AAP_UseTaxiFunc: missing FP data for "..tostring(TName))
+			end
+			return
+		end
 		local TX = AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TName]["x"]
 		local TY = AAP.FPs[AAP.Faction][TContonent][AllyBoatOrNot][TName]["y"]
 		local Nodetotake = AAP_TaxiSearchFunc(TX, TY)
 --	TaxiNodeOnButtonEnter(getglobal("TaxiButton"..Nodetotake))
+		if (not Nodetotake) then
+			if (AAP1["Debug"]) then
+				print("AAP_UseTaxiFunc: no taxi node found for "..tostring(TName))
+			end
+			return
+		end
 		TakeTaxiNode(Nodetotake)
 		AAP.BookingList["TestTaxiFunc"] = Nodetotake
 	else
 		local TName = steps["Name"]
-		local TContonent = AAP.getContinent()
+		if (not AAP.FPs or not AAP.FPs[AAP.Faction] or not AAP.FPs[AAP.Faction][TContonent] or not AAP.FPs[AAP.Faction][TContonent][TName]) then
+			if (AAP1["Debug"]) then
+				print("AAP_UseTaxiFunc: missing FP data for "..tostring(TName))
+			end
+			return
+		end
 		local TX = AAP.FPs[AAP.Faction][TContonent][TName]["x"]
 		local TY = AAP.FPs[AAP.Faction][TContonent][TName]["y"]
 		local Nodetotake = AAP_TaxiSearchFunc(TX, TY)
 --	TaxiNodeOnButtonEnter(getglobal("TaxiButton"..Nodetotake))
+		if (not Nodetotake) then
+			if (AAP1["Debug"]) then
+				print("AAP_UseTaxiFunc: no taxi node found for "..tostring(TName))
+			end
+			return
+		end
 		TakeTaxiNode(Nodetotake)
 		AAP.BookingList["TestTaxiFunc"] = Nodetotake
 	end
@@ -584,6 +636,10 @@ local function AAP_QAskPopWanted()
 	local steps
 	if (CurStep and AAP.ActiveMap and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 		steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
+	end
+	if (not steps or not steps["QaskPopup"]) then
+		AAP.QuestList.SugQuestFrame:Hide()
+		return
 	end
 	local Qid = steps["QaskPopup"]
 	if (IsQuestFlaggedCompleted(Qid) == true) then
@@ -605,6 +661,13 @@ function AAP.QAskPopWantedAsk(AAP_answer)
 	local steps
 	if (CurStep and AAP.ActiveMap and AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap] and AAP.QuestStepList[AAP.ActiveMap][CurStep]) then
 		steps = AAP.QuestStepList[AAP.ActiveMap][CurStep]
+	end
+	if (not steps or not steps["QaskPopup"]) then
+		AAP.QuestList.SugQuestFrame:Hide()
+		return
+	end
+	if (not AAP1[AAP.Realm][AAP.Name]["WantedQuestList"]) then
+		AAP1[AAP.Realm][AAP.Name]["WantedQuestList"] = {}
 	end
 	if (AAP_answer == "yes") then
 		AAP1[AAP.Realm][AAP.Name]["WantedQuestList"][steps["QaskPopup"]] = 1
@@ -4546,16 +4609,35 @@ local function AAP_BuyMerchFunc()
 	return 0
 end
 local function AAP_PopupFunc()
+	if (not AAP_PopupPollActive) then
+		return
+	end
+	AAP_PopupPollTries = AAP_PopupPollTries + 1
 	if (GetNumAutoQuestPopUps() > 0) then
 		local questID, popUpType = GetAutoQuestPopUp(1)
-		if(popUpType == "OFFER") then
-			ShowQuestOffer(GetQuestLogIndexByID(questID))
-		else
-			ShowQuestComplete(GetQuestLogIndexByID(questID))
+		if (questID and GetQuestLogIndexByID(questID) > 0) then
+			if(popUpType == "OFFER") then
+				ShowQuestOffer(GetQuestLogIndexByID(questID))
+			else
+				ShowQuestComplete(GetQuestLogIndexByID(questID))
+			end
+			AAP_PopupPollActive = false
+			return
 		end
-	else
-		C_Timer.After(1, AAP_PopupFunc)
 	end
+	if (AAP_PopupPollTries >= 5) then
+		AAP_PopupPollActive = false
+		return
+	end
+	C_Timer.After(1, AAP_PopupFunc)
+end
+local function AAP_RequestPopupPoll()
+	if (AAP_PopupPollActive) then
+		return
+	end
+	AAP_PopupPollActive = true
+	AAP_PopupPollTries = 0
+	AAP_PopupFunc()
 end
 function AAP_BookQStep()
 	AAP.BookingList["UpdateQuest"] = 1
@@ -4593,17 +4675,21 @@ local function AAP_InstanceTest()
 		return 0
 	end
 end
-function AAP.GroupListingFunc(AAP_StepStuffs, AAP_GListName)
+function AAP.GroupListingFunc(AAP_StepStuffs, AAP_GListKey)
+	if (not AAP_StepStuffs or type(AAP_StepStuffs) ~= "number" or not AAP_GListKey or type(AAP_GListKey) ~= "string" or AAP_GListKey == "") then
+		return
+	end
 	if (not AAP.GroupListSteps[1]) then
 		AAP.GroupListSteps[1] = {}
 		AAP.GroupListStepsNr = 1
 	end
 	AAP.GroupListSteps[1]["Step"] = AAP_StepStuffs
+	AAP.GroupListSteps[1]["Key"] = AAP.Name
 	AAP.GroupListSteps[1]["Name"] = AAP.Name
-	if (AAP_GListName ~= AAP.Name) then
+	if (AAP_GListKey ~= AAP.Name) then
 		local AAPNews = 0
 		for AAP_index,AAP_value in pairs(AAP.GroupListSteps) do
-			if (AAP.GroupListSteps[AAP_index]["Name"] == AAP_GListName) then
+			if (AAP.GroupListSteps[AAP_index]["Key"] == AAP_GListKey) then
 				AAP.GroupListSteps[AAP_index]["Step"] = AAP_StepStuffs
 				AAPNews = 1
 			end
@@ -4611,7 +4697,8 @@ function AAP.GroupListingFunc(AAP_StepStuffs, AAP_GListName)
 		if (AAPNews == 0) then
 			AAP.GroupListStepsNr = AAP.GroupListStepsNr + 1
 			AAP.GroupListSteps[AAP.GroupListStepsNr] = {}
-			AAP.GroupListSteps[AAP.GroupListStepsNr]["Name"] = AAP_GListName
+			AAP.GroupListSteps[AAP.GroupListStepsNr]["Key"] = AAP_GListKey
+			AAP.GroupListSteps[AAP.GroupListStepsNr]["Name"] = AAP.TrimPlayerServer(AAP_GListKey)
 			AAP.GroupListSteps[AAP.GroupListStepsNr]["Step"] = AAP_StepStuffs
 		end
 	end
@@ -4757,7 +4844,10 @@ AAP_QH_EventFrame:SetScript("OnEvent", function(self, event, ...)
 	if (event=="CHAT_MSG_ADDON") then
 		local arg1, arg2, arg3, arg4 = ...;
 		if (arg1 == "AAPChat" and arg3 == "PARTY") then
-			AAP.GroupListingFunc(tonumber(arg2), AAP.TrimPlayerServer(arg4))
+			local AAP_ParsedStep = tonumber(arg2)
+			if (AAP_ParsedStep and AAP_ParsedStep > 0 and AAP_ParsedStep == floor(AAP_ParsedStep) and arg4) then
+				AAP.GroupListingFunc(AAP_ParsedStep, arg4)
+			end
 		end
 	end
 	if (event=="QUEST_CHOICE_UPDATE") then
@@ -4816,7 +4906,7 @@ AAP_QH_EventFrame:SetScript("OnEvent", function(self, event, ...)
 		if(AAP1[AAP.Realm][AAP.Name]["Settings"]["AutoHandIn"] == 1 and not IsControlKeyDown()) then
 			if (steps and steps["SpecialNoAutoHandin"]) then
 			else
-				AAP_PopupFunc()
+				AAP_RequestPopupPoll()
 			end
 		end
 	end
