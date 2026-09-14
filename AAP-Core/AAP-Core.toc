@@ -8,11 +8,13 @@
 ## SavedVariables: AAP1, AAP2, AAP3, AAPQuestNames, AAP_HoldZoneVar
 lib\LibStub\LibStub.lua
 lib\CallbackHandler-1.0\CallbackHandler-1.0.xml
+lib\AceGUI-3.0\AceGUI-3.0.xml
 lib\HereBeDragons\HereBeDragons-1.0.lua
 lib\HereBeDragons\HereBeDragons-Pins-1.0.lua
 Localization.lua
 Bindings.xml
 Core.lua
+QuestTitles.lua
 OptionsPanel.lua
 Banners.lua
 BrutallStatic.lua

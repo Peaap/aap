@@ -2689,10 +2689,6 @@ local function AAP_UpdateMapId()
 	-- HBD already tracks the player's actual zone map. Route selectors use that ID.
 	local playerMapID = HBD:GetPlayerZone()
 	AAP.ActiveMap = playerMapID
-	-- TEMP DEBUG: remove after diagnosing empty Zone window.
-	print("AAP DEBUG ActiveMap:", AAP.ActiveMap)
-	print("AAP DEBUG PlayerZone:", HBD:GetPlayerZone())
-	print("AAP DEBUG HasRoute:", AAP.ActiveMap and AAP.QuestStepList[AAP.ActiveMap] ~= nil)
 	if (OldMap and OldMap ~= AAP.ActiveMap) then
 		AAP.BookingList["PrintQStep"] = 1
 	end
@@ -2703,10 +2699,10 @@ local function AAP_UpdateMapId()
 	if (AAP.Faction == "Alliance") then
 		AAP.ActiveMap = "A"..AAP.ActiveMap
 	end
-	if (AAP.ActiveMap == 194 and AAP.Gender == 2) then
+	if (AAP.ActiveMap == 204 and AAP.Gender == 2) then
 		AAP.ActiveMap = "194-male"
 	end
-	if (AAP.ActiveMap == 194 and AAP.Gender == 3) then
+	if (AAP.ActiveMap == 204 and AAP.Gender == 3) then
 		AAP.ActiveMap = "194-female"
 	end
 	if (AAP.ActiveMap == 23 and AAP.Class[3] == 6 and IsQuestFlaggedCompleted(13189) == false) then
@@ -2728,16 +2724,16 @@ local function AAP_UpdateMapId()
 	local AAPZoneActiveCheck = 0
 --------------------------------
 ---- DH Start Area - Alliance ----
-	if (("A630" == AAP.ActiveMap or "A673" == AAP.ActiveMap or "A672" == AAP.ActiveMap) and AAP.Class and AAP.Class[3] and AAP.Class[3] == 12 and IsQuestFlaggedCompleted(39689) == false) then
+	if (((AAP.ActiveMap == "A630" or AAP.ActiveMap == "A631" or AAP.ActiveMap == "A632" or AAP.ActiveMap == "A633" or AAP.ActiveMap == "A672" or AAP.ActiveMap == "A673" or AAP.ActiveMap == "A674" or AAP.ActiveMap == "A675")) and AAP.Class and AAP.Class[3] and AAP.Class[3] == 12 and IsQuestFlaggedCompleted(39689) == false) then
 		AAP.ActiveMap = "A672-DH-Start"
 	end
 ---- DH Start Area - Horde ----
-	if ((630 == AAP.ActiveMap or 673 == AAP.ActiveMap or 672 == AAP.ActiveMap) and AAP.Class and AAP.Class[3] and AAP.Class[3] == 12 and IsQuestFlaggedCompleted(39689) == false) then
+	if ((AAP.ActiveMap == 630 or AAP.ActiveMap == 631 or AAP.ActiveMap == 632 or AAP.ActiveMap == 633 or AAP.ActiveMap == 672 or AAP.ActiveMap == 673 or AAP.ActiveMap == 674 or AAP.ActiveMap == 675) and AAP.Class and AAP.Class[3] and AAP.Class[3] == 12 and IsQuestFlaggedCompleted(39689) == false) then
 		AAP.ActiveMap = "A672-DH-Start"
 	end
 ---- Vanilla - Horde -----------
 	if (AAP.Faction == "Horde" and AAP.Level == 20) then
-		if (AAP.ActiveMap == 85 and AAP.Race == "MagharOrc") then
+		if (AAP.ActiveMap == 321 and AAP.Race == "MagharOrc") then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -2748,7 +2744,7 @@ local function AAP_UpdateMapId()
 			end
 			AAPZoneActiveCheck = 1
 			AAP.ActiveMap = "1-MagharOrc"
-		elseif (AAP.ActiveMap == 85 and AAP.Race == "HighmountainTauren") then
+		elseif (AAP.ActiveMap == 321 and AAP.Race == "HighmountainTauren") then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -2759,7 +2755,7 @@ local function AAP_UpdateMapId()
 			end
 			AAPZoneActiveCheck = 1
 			AAP.ActiveMap = "1-HighmountainTauren"
-		elseif (AAP.ActiveMap == 85 and AAP.Race == "Nightborne") then
+		elseif (AAP.ActiveMap == 321 and AAP.Race == "Nightborne") then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -2773,7 +2769,7 @@ local function AAP_UpdateMapId()
 		end
 	end
 	if (AAP.Faction == "Horde" and AAP.Level > 19 and AAP.Level < 60) then
-		if (AAP.ActiveMap == 85) then
+		if (AAP.ActiveMap == 321) then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -2790,7 +2786,7 @@ local function AAP_UpdateMapId()
 				end
 			end
 		end
-		if (AAP.ActiveMap == 76) then
+		if (AAP.ActiveMap == 181) then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -2816,7 +2812,7 @@ local function AAP_UpdateMapId()
 				AAP.ActiveMap = "90-20Silverpine"
 			end
 		end
-		if (AAP.ActiveMap == 18) then
+		if (AAP.ActiveMap == 20) then
 			if (IsAddOnLoaded("AAP-Vanilla") == false) then
 				local loaded, reason = LoadAddOn("AAP-Vanilla")
 				if (not loaded) then
@@ -3165,7 +3161,7 @@ local function AAP_UpdateMapId()
 --------------------------------
 ---- TBC - WotLK - Horde -------
 	if (AAP.Faction == "Horde" and AAP.Level > 59 and AAP.Level < 80) then
-		if (AAP.ActiveMap == 85 and IsQuestFlaggedCompleted(11585) == false) then
+		if (AAP.ActiveMap == 321 and IsQuestFlaggedCompleted(11585) == false) then
 			if (IsAddOnLoaded("AAP-TBC-WotLK") == false) then
 				local loaded, reason = LoadAddOn("AAP-TBC-WotLK")
 				if (not loaded) then
@@ -3177,7 +3173,7 @@ local function AAP_UpdateMapId()
 			AAPZoneActiveCheck = 1
 			AAP.ActiveMap = "1-60to80"
 		end
-		if (AAP.ActiveMap == 85 and IsQuestFlaggedCompleted(12792)) then
+		if (AAP.ActiveMap == 321 and IsQuestFlaggedCompleted(12792)) then
 			if (IsAddOnLoaded("AAP-TBC-WotLK") == false) then
 				local loaded, reason = LoadAddOn("AAP-TBC-WotLK")
 				if (not loaded) then
@@ -3189,7 +3185,7 @@ local function AAP_UpdateMapId()
 			AAPZoneActiveCheck = 1
 			AAP.ActiveMap = "1-60to80-2"
 		end
-		if (AAP.ActiveMap == 18) then
+		if (AAP.ActiveMap == 20) then
 			if (IsAddOnLoaded("AAP-TBC-WotLK") == false) then
 				local loaded, reason = LoadAddOn("AAP-TBC-WotLK")
 				if (not loaded) then
@@ -3216,7 +3212,7 @@ local function AAP_UpdateMapId()
 		
 	end
 	if (AAP.Faction == "Horde" and AAP.Level > 59 and AAP.Level < 83) then
-		if (AAP.ActiveMap == 114) then
+		if (AAP.ActiveMap == 486) then
 			if (IsAddOnLoaded("AAP-TBC-WotLK") == false) then
 				local loaded, reason = LoadAddOn("AAP-TBC-WotLK")
 				if (not loaded) then
@@ -3427,7 +3423,7 @@ local function AAP_UpdateMapId()
 		end
 	end
 	if (AAP.Faction == "Alliance" and AAP.Level > 59 and AAP.Level < 83) then
-		if (AAP.ActiveMap == "A114") then
+		if (AAP.ActiveMap == "A486") then
 			if (IsAddOnLoaded("AAP-TBC-WotLK") == false) then
 				local loaded, reason = LoadAddOn("AAP-TBC-WotLK")
 				if (not loaded) then
@@ -3564,7 +3560,7 @@ local function AAP_UpdateMapId()
 --------------------------------
 ---- Cata - MoP - Horde --------
 	if (AAP.Faction == "Horde" and AAP.Level > 79 and AAP.Level < 90) then
-		if (AAP.ActiveMap == 85) then
+		if (AAP.ActiveMap == 321) then
 			if (IsAddOnLoaded("AAP-Cata-MoP") == false) then
 				local loaded, reason = LoadAddOn("AAP-Cata-MoP")
 				if (not loaded) then
@@ -3576,7 +3572,7 @@ local function AAP_UpdateMapId()
 			AAPZoneActiveCheck = 1
 			AAP.ActiveMap = "1-80to90"
 		end
-		if (AAP.ActiveMap == 18) then
+		if (AAP.ActiveMap == 20) then
 			if (IsAddOnLoaded("AAP-Cata-MoP") == false) then
 				local loaded, reason = LoadAddOn("AAP-Cata-MoP")
 				if (not loaded) then
@@ -3602,7 +3598,7 @@ local function AAP_UpdateMapId()
 		end
 	end
 	if (AAP.Faction == "Horde" and AAP.Level > 79 and AAP.Level < 93) then
-		if (AAP.ActiveMap == 198) then
+		if (AAP.ActiveMap == 208) then
 			if (IsAddOnLoaded("AAP-Cata-MoP") == false) then
 				local loaded, reason = LoadAddOn("AAP-Cata-MoP")
 				if (not loaded) then
@@ -3810,7 +3806,7 @@ local function AAP_UpdateMapId()
 --------------------------------
 ---- WoD - Horde ---------------
 	if (AAP.Faction == "Horde" and AAP.Level > 89 and AAP.Level < 100) then
-		if (AAP.ActiveMap == 18) then
+		if (AAP.ActiveMap == 20) then
 			if (IsAddOnLoaded("AAP-WoD") == false) then
 				local loaded, reason = LoadAddOn("AAP-WoD")
 				if (not loaded) then
@@ -3821,7 +3817,7 @@ local function AAP_UpdateMapId()
 			end
 			AAP.ActiveMap = "18-90-100"
 		end
-		if (AAP.ActiveMap == 85) then
+		if (AAP.ActiveMap == 321) then
 			if (IsAddOnLoaded("AAP-WoD") == false) then
 				local loaded, reason = LoadAddOn("AAP-WoD")
 				if (not loaded) then
@@ -4048,7 +4044,7 @@ local function AAP_UpdateMapId()
 --------------------------------
 ---- Legion - Horde ------------
 	if ((AAP.Faction == "Horde" and AAP.Level > 99 and AAP.Level < 111) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Horde")) then
-		if (AAP.ActiveMap == 18) then
+		if ((AAP.ActiveMap == 20 or AAP.ActiveMap == 20 or AAP.ActiveMap == 20)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4059,7 +4055,7 @@ local function AAP_UpdateMapId()
 			end
 			AAP.ActiveMap = "18-100-110"
 		end
-		if (AAP.ActiveMap == 85) then
+		if (AAP.ActiveMap == 321) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4070,7 +4066,7 @@ local function AAP_UpdateMapId()
 			end
 			AAP.ActiveMap = "1-100to110"
 		end
-		if (AAP.ActiveMap == 627) then
+		if ((AAP.ActiveMap == 625 or AAP.ActiveMap == 626 or AAP.ActiveMap == 627 or AAP.ActiveMap == 628 or AAP.ActiveMap == 629)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4083,7 +4079,7 @@ local function AAP_UpdateMapId()
 		end
 	end
 	if ((AAP.Faction == "Horde" and AAP.Level > 97 and AAP.Level < 113) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Horde")) then
-		if (AAP.ActiveMap == 634) then
+		if ((AAP.ActiveMap == 634 or AAP.ActiveMap == 635 or AAP.ActiveMap == 636 or AAP.ActiveMap == 637 or AAP.ActiveMap == 638 or AAP.ActiveMap == 639 or AAP.ActiveMap == 640)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4097,7 +4093,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == 630) then
+		if ((AAP.ActiveMap == 630 or AAP.ActiveMap == 631 or AAP.ActiveMap == 632 or AAP.ActiveMap == 633)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4111,7 +4107,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == 641) then
+		if ((AAP.ActiveMap == 641 or AAP.ActiveMap == 642 or AAP.ActiveMap == 643 or AAP.ActiveMap == 644)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4125,7 +4121,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == 76) then
+		if (AAP.ActiveMap == 181) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4139,7 +4135,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == 650) then
+		if ((AAP.ActiveMap == 650 or AAP.ActiveMap == 651 or AAP.ActiveMap == 652 or AAP.ActiveMap == 653 or AAP.ActiveMap == 654 or AAP.ActiveMap == 655 or AAP.ActiveMap == 656 or AAP.ActiveMap == 657 or AAP.ActiveMap == 658 or AAP.ActiveMap == 659 or AAP.ActiveMap == 660)) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4168,7 +4164,7 @@ local function AAP_UpdateMapId()
 			end
 			AAP.ActiveMap = "A84-100-110"
 		end
-		if (AAP.ActiveMap == "A627") then
+		if ((AAP.ActiveMap == "A625" or AAP.ActiveMap == "A626" or AAP.ActiveMap == "A627" or AAP.ActiveMap == "A628" or AAP.ActiveMap == "A629")) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4181,7 +4177,7 @@ local function AAP_UpdateMapId()
 		end
 	end
 	if ((AAP.Faction == "Alliance" and AAP.Level > 97 and AAP.Level < 113) or (AAP1[AAP.Realm][AAP.Name]["Settings"]["Legion"] == 1 and AAP.Faction == "Alliance")) then
-		if (AAP.ActiveMap == "A634") then
+		if ((AAP.ActiveMap == "A634" or AAP.ActiveMap == "A635" or AAP.ActiveMap == "A636" or AAP.ActiveMap == "A637" or AAP.ActiveMap == "A638" or AAP.ActiveMap == "A639" or AAP.ActiveMap == "A640")) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4195,7 +4191,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == "A630") then
+		if ((AAP.ActiveMap == "A630" or AAP.ActiveMap == "A631" or AAP.ActiveMap == "A632" or AAP.ActiveMap == "A633")) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4209,7 +4205,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == "A641") then
+		if ((AAP.ActiveMap == "A641" or AAP.ActiveMap == "A642" or AAP.ActiveMap == "A643" or AAP.ActiveMap == "A644")) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4237,7 +4233,7 @@ local function AAP_UpdateMapId()
 				levelcheck110 = 1
 			end
 		end
-		if (AAP.ActiveMap == "A650") then
+		if ((AAP.ActiveMap == "A650" or AAP.ActiveMap == "A651" or AAP.ActiveMap == "A652" or AAP.ActiveMap == "A653" or AAP.ActiveMap == "A654" or AAP.ActiveMap == "A655" or AAP.ActiveMap == "A656" or AAP.ActiveMap == "A657" or AAP.ActiveMap == "A658" or AAP.ActiveMap == "A659" or AAP.ActiveMap == "A660")) then
 			if (IsAddOnLoaded("AAP-Legion") == false) then
 				local loaded, reason = LoadAddOn("AAP-Legion")
 				if (not loaded) then
@@ -4282,10 +4278,6 @@ local function AAP_UpdateMapId()
 	end
 	if (AAP.ActiveQuests and AAP.ActiveQuests[26320] and (playerMapID == 291 or playerMapID == 292)) then
 		AAP.ActiveMap = "ADeadmines"
-	end
-	-- TEMP DEBUG: remove after diagnosing empty Zone window.
-	if (AAP.ActiveMap) then
-		print("AAP DEBUG Route:", AAP.ActiveMap, AAP.QuestStepList[AAP.ActiveMap])
 	end
 	local route = AAP.QuestStepList and AAP.QuestStepList[AAP.ActiveMap]
 	if (route and not route[AAP1[AAP.Realm][AAP.Name][AAP.ActiveMap]]) then
